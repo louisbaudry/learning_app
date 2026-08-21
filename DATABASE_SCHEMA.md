@@ -118,6 +118,8 @@ create table students (
                     "pin_enabled": false
                   }'::jsonb,
   pin_hash        text,                       -- bcrypt hash of optional 4-digit PIN
+  learner_notes   text,                       -- interests & learning style for AI personalization
+                                              -- (free text by parent; never diagnosis/medical data)
   created_at      timestamptz not null default now(),
   updated_at      timestamptz not null default now(),
   deleted_at      timestamptz

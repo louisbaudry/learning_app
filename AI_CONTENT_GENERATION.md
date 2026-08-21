@@ -207,8 +207,8 @@ Nothing ever auto-publishes, so a bad generation can never reach Arthur — the 
 
 ---
 
-## 9. Open Points for Review
+## 9. Resolved Review Points (2026-08-21)
 
-1. **Learner context:** confirm adding `learner_notes` to `students` (interests/learning style, no diagnosis data).
-2. **Variant generation UI:** "generate 2 variants side-by-side" in MVP, or single generation first and variants when A/B testing starts? *Proposed: single generation in MVP; variants added when testing begins — the logging is there from day one either way.*
-3. **French pedagogical review:** before Arthur ever sees AI content, we should validate the prompt with ~10 real generations reviewed by you (and ideally someone who knows his current school level).
+1. **Learner context — DECIDED:** `learner_notes text` column added to `students` (see DATABASE_SCHEMA.md §3.4). Interests and learning style only, written freely by the parent; no diagnosis or medical data.
+2. **Variant generation — DECIDED:** single generation in MVP. The `ai_generations` logging is in place from day one; a "generate variants" button is added when the A/B testing phase starts.
+3. **French pedagogical validation (action item, pre-launch):** before Arthur ever sees AI content, validate the system prompt with ~10 real generations reviewed by the parent (and ideally someone who knows his current school level).
