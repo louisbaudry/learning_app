@@ -395,9 +395,8 @@ create index on device_link_codes (code) where used_at is null;
 
 ---
 
-## 9. Open Points for Review
+## 9. Resolved Review Points (2026-08-21)
 
-1. **Attempts policy:** should Arthur get multiple attempts per question (current schema supports it — `attempt` column), and does the score count first attempt only? *Proposed: allow retry after wrong answer with hint, score = first attempt.*
-2. **Due dates:** soft (informational) or hard (assignment locks after due date)? *Proposed: soft — nothing ever "locks" for the child.*
-3. **Timezone for streaks/stats:** compute daily stats in the student's timezone (Europe/Paris initially). *Proposed: store family timezone, done.*
-```
+1. **Attempts policy — DECIDED:** after a wrong answer the student sees a hint and can retry until correct (always ends on success). Scores and progress statistics count the **first attempt only**, so the data reflects his real level. The `attempt` column in `responses` records every try.
+2. **Due dates — DECIDED:** soft. Due dates order the student's feed and drive "overdue" visibility on the parent dashboard, but assignments never lock and can always be completed late.
+3. **Timezone — DECIDED:** daily statistics computed in the family's stored timezone (`profiles.timezone`, Europe/Paris initially).
