@@ -306,38 +306,33 @@ Response (Student's answer to a question)
 
 ### 5.1 High-Level Overview
 ```
-┌─────────────────────────────────────────────────┐
-│         Web Admin Panel (React/Next.js)         │
-│  (Parent creates content, tracks progress)      │
-└────────────────────┬────────────────────────────┘
-                     │
-                     │ HTTPS REST API
-                     │
-┌────────────────────▼────────────────────────────┐
-│    Backend API (Node.js/Express)                │
-│  - Authentication                               │
-│  - Content Management                           │
-│  - Assignment Tracking                          │
-│  - AI Integration (Claude API)                  │
-└────────────────┬────────────────────┬───────────┘
-                 │                    │
-        ┌────────▼────────┐   ┌───────▼──────────┐
-        │   Supabase      │   │   Claude API     │
-        │   (PostgreSQL)  │   │  (Content Gen)   │
-        │   (Storage)     │   │                  │
-        │   (Auth)        │   │  (Future: DALL-E)│
-        └─────────────────┘   └──────────────────┘
-                 │
-        ┌────────▼────────┐
-        │   File Storage  │
-        │  (Images, etc)  │
-        └─────────────────┘
-                 │
-        ┌────────▼────────────────────────────────┐
-        │  Mobile App (React Native/Android)      │
-        │  (Student completes assignments)        │
-        └─────────────────────────────────────────┘
+┌──────────────────────────────┐   ┌──────────────────────────────┐
+│  Web Admin Panel (Next.js)   │   │ Mobile App (React Native +   │
+│  Parent: creates content,    │   │ Expo, Android → iOS later)   │
+│  assigns, tracks progress    │   │ Student: completes homework  │
+└──────────────┬───────────────┘   └──────────────┬───────────────┘
+               │                                  │
+               │   Supabase client SDK            │
+               │   (Row Level Security enforced)  │
+               ▼                                  ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                           SUPABASE                              │
+│  ┌──────────────┐  ┌────────┐  ┌─────────┐  ┌────────────────┐  │
+│  │  PostgreSQL  │  │  Auth  │  │ Storage │  │ Edge Functions │  │
+│  │  (data, RLS) │  │        │  │ (images)│  │ (AI calls,     │  │
+│  │              │  │        │  │         │  │ sensitive      │  │
+│  │              │  │        │  │         │  │ logic)         │  │
+│  └──────────────┘  └────────┘  └─────────┘  └───────┬────────┘  │
+└─────────────────────────────────────────────────────┼───────────┘
+                                                      │
+                                             ┌────────▼─────────┐
+                                             │   Claude API     │
+                                             │  (content gen)   │
+                                             │ Future: image AI │
+                                             └──────────────────┘
 ```
+
+**Key principle:** No separate API server. Both apps talk directly to Supabase; PostgreSQL Row Level Security guarantees each family only sees its own data. Edge Functions handle anything that must not run on the client (AI API keys, answer validation where cheating matters, setup-code generation).
 
 ### 5.2 Component Details
 
@@ -354,7 +349,7 @@ Response (Student's answer to a question)
 - **Deployment:** Vercel or self-hosted
 
 #### 5.2.2 Mobile App (Android)
-- **Framework:** React Native or Kotlin (Android-native)
+- **Framework:** React Native + Expo (decided — enables future iOS from same codebase, over-the-air updates)
 - **Purpose:** Student completes assignments
 - **Key Screens:**
   - Login/Authentication
@@ -364,23 +359,22 @@ Response (Student's answer to a question)
   - Settings (language, accessibility)
 - **Deployment:** Google Play Store
 
-#### 5.2.3 Backend API
-- **Framework:** Node.js + Express (or similar)
-- **Database:** Supabase (PostgreSQL)
-- **Key Responsibilities:**
-  - User authentication (JWT tokens)
-  - CRUD operations for content, assignments, responses
-  - Business logic (calculate progress, validate answers)
-  - AI integration (call Claude API for content generation)
-  - File storage coordination (images, etc.)
-- **Deployment:** Supabase Edge Functions or self-hosted (Docker)
+#### 5.2.3 Backend (Supabase-only — decided)
+- **No standalone API server.** Apps use the Supabase client SDK directly.
+- **PostgreSQL + Row Level Security (RLS):** All access rules enforced at the database level — each parent sees only their own students/content; each student device sees only its own assignments.
+- **Edge Functions (TypeScript/Deno)** for logic that cannot run on the client:
+  - AI content generation (holds the Claude API key)
+  - Student device linking (setup-code generation and validation)
+  - Progress aggregation where needed
+- **Database functions/triggers** for derived data (e.g., auto-update assignment status when all questions answered).
 
 #### 5.2.4 AI Integration
-- **Content Generation:** Claude API (GPT-4 or latest model)
+- **Content Generation:** Claude API (via Edge Function)
   - Parent provides prompt: "Create a lesson on fractions"
   - Claude generates structured JSON with questions
-  - Parent reviews and saves to database
-- **Image Generation (Future):** DALL-E or similar
+  - Content saved as **draft**; parent reviews, edits, and explicitly publishes before it can be assigned (mandatory review — decided)
+  - A/B testing of models/providers during testing phase
+- **Image Generation:** Phase 2. MVP uses parent-uploaded photos and free stock images (real photos of familiar objects are often better for learners with Down Syndrome)
 - **Fallback:** Manual content creation when AI not needed
 
 #### 5.2.5 Database (Supabase)
@@ -460,20 +454,20 @@ Response (Student's answer to a question)
 
 ## 8. Tech Stack
 
-### 8.1 Recommended Stack
+### 8.1 Confirmed Stack (decided 2026-08-21)
 
 | Layer | Technology | Rationale |
 |-------|-----------|-----------|
 | **Frontend (Web)** | Next.js + React + TypeScript | Modern, fast, good for real-time dashboards |
-| **Frontend (Mobile)** | React Native (Expo) or Kotlin | Cross-platform or native Android |
-| **Backend** | Node.js + Express + TypeScript | Matches frontend, good ecosystem |
-| **Database** | Supabase (PostgreSQL) | Familiar to user, built-in auth, real-time |
-| **Authentication** | Supabase Auth | Integrated, secure |
-| **File Storage** | Supabase Storage | Simple, integrated with DB |
-| **AI Content** | Claude API (Anthropic) | High quality structured content |
-| **Image Gen** | DALL-E or Stability AI | For future image generation |
-| **Deployment** | Vercel (web), Google Play (mobile), Supabase Functions (API) | Scalable, serverless |
-| **Monitoring** | Sentry or LogRocket | Error tracking and performance |
+| **Frontend (Mobile)** | React Native + Expo (TypeScript) | One codebase for Android + future iOS; over-the-air updates; same language as web |
+| **Backend** | Supabase Edge Functions (TypeScript/Deno) | No server to maintain; only for AI calls and sensitive logic — everything else via Supabase client + RLS |
+| **Database** | Supabase (PostgreSQL + Row Level Security) | Familiar to user, built-in auth, real-time |
+| **Authentication** | Supabase Auth | Integrated, secure; child devices use setup-code linking + optional PIN |
+| **File Storage** | Supabase Storage | Simple, integrated with DB; question/answer images, avatars |
+| **AI Content** | Claude API (Anthropic) | High quality structured content; A/B test alternatives in testing phase |
+| **Images (exercises)** | Parent uploads + free stock (Unsplash/Pexels); AI generation Phase 2 | Real photos work well for target learners; simpler MVP |
+| **Deployment** | Vercel (web), Google Play (mobile), Supabase (DB + functions) | Scalable, serverless |
+| **Monitoring** | Sentry | Error tracking and performance |
 
 ### 8.2 Development Tools
 - **Version Control:** Git + GitHub
@@ -508,7 +502,7 @@ Response (Student's answer to a question)
 ### 9.2 Phase 1: MVP Development
 **Duration:** 8-12 weeks  
 **Deliverables:**
-- Backend API (Supabase + Express)
+- Supabase project (schema, RLS policies, Edge Functions)
 - Web Admin Panel (basic)
 - Android Mobile App (basic)
 - AI integration (Claude API)
@@ -568,22 +562,26 @@ Response (Student's answer to a question)
 
 ---
 
-## 11. Open Questions & Decisions
+## 11. Architecture Decisions (Resolved 2026-08-21)
 
-### Questions to Resolve:
-1. **Mobile Framework:** React Native (Expo) vs native Kotlin/Android?
-2. **Backend Hosting:** Supabase Edge Functions vs self-hosted Node.js server?
-3. **Image Generation:** When and how to integrate DALL-E? Phase 1 or Phase 2?
-4. **Content Moderation:** How to review AI-generated content before student sees it?
-5. **Performance Metrics:** What are success metrics for Arthur's engagement?
-6. **Data Export:** Should parents be able to export all data? (GDPR requirement)
-7. **Offline Support:** Should mobile app work offline (download content first)?
-8. **Payments:** Will this be free or paid? How to sustain long-term?
+All foundational questions have been resolved with the project owner:
 
-### Decisions Made:
-- ✅ Tech Stack: Supabase + Next.js + React Native
+| # | Decision | Choice | Rationale |
+|---|----------|--------|-----------|
+| 1 | **Mobile Framework** | React Native + Expo | One TypeScript codebase for Android + future iOS; same language as web admin; over-the-air updates reach Arthur's phone without Play Store delays or physical presence |
+| 2 | **Backend** | Supabase-only | Direct client access with Row Level Security + Edge Functions for AI calls and sensitive logic. No server to maintain, near-zero cost at MVP scale, owner already proficient |
+| 3 | **Images for exercises** | Uploaded photos + free stock (MVP); AI generation in Phase 2 | Real photos of concrete, familiar objects are often more effective for learners with Down Syndrome; keeps MVP simpler and cheaper |
+| 4 | **AI content review** | Mandatory parent review | AI-generated content always lands as `draft`; parent must review and explicitly publish before it can be assigned. Nothing unreviewed ever reaches the child |
+| 5 | **Offline support** | Online-only (MVP) | Arthur has reliable connectivity. Answer submission includes a retry queue for brief network hiccups (standard practice, not offline architecture). Full offline support reconsidered in Phase 2 |
+| 6 | **Business model** | Deferred | No billing/plan concepts in MVP. Schema stays clean and multi-tenant so plans/quotas can be added later without restructuring |
+| 7 | **Child login** | One-time setup code + optional PIN | Parent generates a short link code in the admin panel; entered once on the child's phone, the app stays logged in, optionally protected by a simple 4-digit PIN. No email/password for the child |
+| 8 | **Co-parent access** | Not in MVP, designed for | Single parent account in MVP. Data model includes roles/account-membership from day one so invited read-only caregivers become a small Phase 2 feature, not a redesign |
+| 9 | **Data export** | Required (GDPR) | Parents can export all their data. Implemented by Phase 1.5 at the latest |
+
+### Earlier Decisions:
+- ✅ Tech Stack: Supabase + Next.js + React Native (Expo)
 - ✅ Languages: English code, French + English UI (Phase 1)
-- ✅ AI: Claude API for content generation
+- ✅ AI: Claude API for content generation (A/B test alternatives during testing phase)
 - ✅ Scope: MVP with multiple choice, fill-in-blank, image ID
 - ✅ Timeline: Take time for proper foundation (4-6 weeks specs, then development)
 
