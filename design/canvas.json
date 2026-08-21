@@ -1,0 +1,22 @@
+{
+  "artboards": [
+    { "file": "Main.dc.html", "x": 0, "y": 0, "w": 390, "h": 844, "title": "Accueil", "page": "page-1" },
+    { "file": "QuestionChoix.dc.html", "x": 490, "y": 0, "w": 390, "h": 844, "title": "Choix multiple", "page": "page-1" },
+    { "file": "QuestionTexte.dc.html", "x": 980, "y": 0, "w": 390, "h": 844, "title": "Texte à trou (indice)", "page": "page-1" },
+    { "file": "QuestionImage.dc.html", "x": 1470, "y": 0, "w": 390, "h": 844, "title": "Images", "page": "page-1" },
+    { "file": "Bravo.dc.html", "x": 1960, "y": 0, "w": 390, "h": 844, "title": "Fin de leçon", "page": "page-1" },
+    { "file": "TableauDeBord.dc.html", "x": 0, "y": 0, "w": 1440, "h": 900, "title": "Tableau de bord", "page": "page-2" },
+    { "file": "Bibliotheque.dc.html", "x": 1560, "y": 0, "w": 1440, "h": 900, "title": "Bibliothèque", "page": "page-2" },
+    { "file": "GenerateurIA.dc.html", "x": 0, "y": 1040, "w": 1440, "h": 900, "title": "Générateur IA", "page": "page-2" },
+    { "file": "Progres.dc.html", "x": 1560, "y": 1040, "w": 1440, "h": 900, "title": "Progrès", "page": "page-2" }
+  ],
+  "annotations": [
+    { "id": "note-arthur", "x": 0, "y": -140, "w": 420, "text": "Application d'Arthur (Android) — texte très grand, gros boutons, lecture audio, jamais d'échec bloquant : après une mauvaise réponse, un indice apparaît et il réessaie.", "page": "page-1" },
+    { "id": "note-admin", "x": 0, "y": -140, "w": 420, "text": "Panneau parent (web) — création de leçons à la main ou par IA, relecture obligatoire avant publication, suivi détaillé des progrès.", "page": "page-2" }
+  ],
+  "pages": [
+    { "id": "page-1", "name": "Application Arthur" },
+    { "id": "page-2", "name": "Panneau parent" }
+  ],
+  "launch": { "view": "canvas", "page": "page-1" }
+}
