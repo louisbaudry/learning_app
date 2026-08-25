@@ -1,0 +1,14 @@
+{
+  "name": "generation-test",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Test harness for AI lesson generation (French) — validates the v1 pedagogical prompt before building the app",
+  "scripts": {
+    "generate": "node generate.mjs"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^1",
+    "zod": "^3"
+  }
+}
