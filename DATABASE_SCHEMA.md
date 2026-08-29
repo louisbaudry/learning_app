@@ -14,7 +14,7 @@
 3. **Children are not auth users.** Arthur never has an email/password. His phone is *linked* to his student profile via a one-time setup code (Decision 7) and gets a device-scoped session.
 4. **Content lifecycle.** Every piece of content has a status: `draft → published → archived`. AI-generated content always starts as `draft` (Decision 4).
 5. **Multilingual by design.** Content rows carry a `language` code. UI translations live in the apps, not the database.
-6. **Soft deletes** on user-facing data (`deleted_at`) for GDPR-friendly recovery windows; hard delete via scheduled cleanup.
+6. **Soft deletes** on user-facing data (`deleted_at`) for GDPR-friendly recovery windows; hard delete via scheduled cleanup. Window is **30 days**: a family/student soft-deleted (or an account closed) can be restored within 30 days, after which a scheduled job permanently purges the rows — no indefinite retention (`SPECIFICATIONS.md` §11 Decision 12).
 7. **No billing concepts** (Decision 6) — but nothing in this schema would need to change to add a `plans` table keyed on `family_id` later.
 
 ---
@@ -54,14 +54,17 @@ Extends Supabase `auth.users` (1:1). Created by trigger on signup.
 
 ```sql
 create table profiles (
-  id            uuid primary key references auth.users(id) on delete cascade,
-  full_name     text not null default '',
-  language      text not null default 'fr' check (language in ('en','fr','es','uk')),
-  timezone      text not null default 'Europe/Paris',
-  created_at    timestamptz not null default now(),
-  updated_at    timestamptz not null default now()
+  id                  uuid primary key references auth.users(id) on delete cascade,
+  full_name           text not null default '',
+  language            text not null default 'fr' check (language in ('en','fr','es','uk')),
+  timezone            text not null default 'Europe/Paris',
+  terms_accepted_at   timestamptz,          -- GDPR Art. 5(2) accountability: when this parent accepted the privacy policy/terms
+  created_at          timestamptz not null default now(),
+  updated_at          timestamptz not null default now()
 );
 ```
+
+`terms_accepted_at` (added 2026-08-29 — `SPECIFICATIONS.md` §11 Decision 12): the app's legal basis for processing a child's data is the parent's own contract with the service, not a separate child consent flow (Arthur never signs up himself — Decision 7). This column is the accountability record of that acceptance, set during onboarding.
 
 ### 3.2 `families` — the tenancy unit
 

@@ -38,6 +38,7 @@ Admin Panel (Next.js)                Supabase Edge Function              Claude 
 - The **Claude API key lives only in the Edge Function** (Supabase secret). It never reaches the browser or the mobile app.
 - Every generation writes an `ai_generations` row: prompt, model, raw response, outcome. This is our A/B testing dataset and debugging trail.
 - Generation is synchronous from the parent's point of view (~10–30 s with a progress indicator). If it fails, the row records the error and the UI offers retry.
+- **Privacy (added 2026-08-29 — `SPECIFICATIONS.md` §11 Decision 12):** the prompt sent to the Claude API can include `learner_notes`/`topic`/`extra_instructions` about a child, so Anthropic is a disclosed sub-processor (must appear in the privacy policy). Use the API's zero/no-training-retention option if/when available for this account, and never send `disability_type`-like data — there is none in the schema to send, and the admin panel's `learner_notes` field should carry inline copy telling the parent it's for interests/learning style, not diagnosis or medical information.
 
 ---
 

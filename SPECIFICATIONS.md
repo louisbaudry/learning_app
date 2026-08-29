@@ -225,7 +225,11 @@ Student (Children/Learners)
 ├── user_id (FK → User)
 ├── full_name (string)
 ├── date_of_birth (date)
-├── disability_type (string, optional: 'down_syndrome', 'autism', etc.)
+├── ~~disability_type~~ — REMOVED (see §11 Decision 12 / `DATABASE_SCHEMA.md` §3.4):
+│   this early draft predates the GDPR review; a diagnosis label is Article 9
+│   special-category data with no functional payoff, so it was dropped in
+│   favor of a free-text `learner_notes` (interests/learning style, no
+│   diagnosis) plus a `settings` jsonb for accessibility adaptation
 ├── language_preference (enum)
 ├── avatar_url (string, optional)
 ├── created_at (timestamp)
@@ -388,13 +392,13 @@ Response (Student's answer to a question)
 ## 6. Security & Privacy
 
 ### 6.1 Data Protection
-- **GDPR Compliance:** Child data protection (minors under 16)
+- **GDPR Compliance:** see §11 Decision 12 for the resolved legal-basis, consent, and processor analysis (this line originally said "minors under 16" — France's own consent-age threshold under Art. 8 is 15, and in any case it turns out not to be the operative rule here; see Decision 12)
 - **Encryption:** All data in transit (HTTPS), at rest (Supabase encryption)
 - **Access Control:** 
   - Parents can only access their own students' data
   - Students can only see their own assignments
   - Implement role-based access control (RBAC)
-- **Data Retention:** Define retention policy (e.g., keep for 5 years, then anonymize)
+- **Data Retention — RESOLVED (see §11 Decision 12):** soft-delete window of 30 days (undo/recovery), then hard purge via scheduled job. No indefinite retention or "keep for N years" — a closed family account's data should not persist past the recovery window.
 
 ### 6.2 Authentication & Authorization
 - **Two-Factor Authentication (2FA):** Optional for parent accounts
@@ -579,13 +583,14 @@ All foundational questions have been resolved with the project owner:
 | 9 | **Data export** | Required (GDPR) | Parents can export all their data. Implemented by Phase 1.5 at the latest |
 | 10 | **Curriculum alignment (Resolved 2026-08-29)** | Tag content with an optional French Éduscol *cycle* (`cycle_1`–`cycle_4`) + free-text *domaine*, chosen by the parent per lesson — never derived from `students.date_of_birth` | Éduscol cycles (see `DATABASE_SCHEMA.md` §3.7) are the standard reference for French K-12 content, so tagging against them lets a parent gauge where a lesson sits nationally and gives the AI a concrete complexity/vocabulary target. But Decision 3 already establishes the target learner as a teenage learner with Down Syndrome — instructional level and chronological age diverge for this population, so the tag must stay a parent-chosen label, not an age-computed default. The 2025 Socle commun rewrite (in progress at CSP as of this writing) is a further reason to keep it a loose reference tag rather than a hard-coded, versioned mapping to official text |
 | 11 | **Assessment item standard (Resolved 2026-08-29)** | Model `questions`/`question_options` after IMS **QTI 3.0**'s item shape (prompt = item body, options = choice interactions, `is_correct` = response declaration, `hint`+`explanation` = feedback) without adopting full QTI XML or claiming interoperability | Gets the benefit of a well-tested item model (question/choices/correct-response/feedback is exactly QTI's `assessmentItem`) without the overhead of XML authoring or an LMS-interop requirement we don't have (single-app platform, not an LMS — see deferred item below). If content ever needs to be exported to another platform, the field mapping to QTI is straightforward because the shape already matches |
+| 12 | **Child data, legal basis & retention (Resolved 2026-08-29)** | (a) No GDPR Art. 8 "child's own consent" flow applies — Arthur never independently signs up for anything (Decision 7: parent-issued link code, no email/password), so the operative relationship is the *parent* managing their own family's account, not a minor consenting to an information-society service. (b) Processing basis is contract (delivering the service the parent signed up for) + legitimate interest (personalization via `learner_notes`), not consent-per-item. (c) A parent's acceptance of the privacy policy/terms is still recorded for GDPR accountability (Art. 5(2)) — new `profiles.terms_accepted_at`. (d) No Art. 9 special-category data is stored (Decision was already made in `DATABASE_SCHEMA.md` §3.4 to drop `disability_type`; §3 data model above has been corrected to match). (e) Sub-processors — Supabase (hosting/DB) and Anthropic (Claude API for generation) — must be disclosed in the privacy policy; Claude API calls should use the vendor's zero/no-training-retention option where available, since prompts can include a child's `learner_notes`/topic. (f) Retention: 30-day soft-delete recovery window, then hard purge by scheduled job — no indefinite retention | France's Art. 8 threshold (age 15) governs a *child's own* consent to a service, which never happens here — the design already sidesteps this by construction (Decision 7). What was actually missing was accountability evidence (recording consent) and a concrete retention number to replace the open "define later" placeholder in §6.1. The special-category-data decision was already right in the schema; the gap was that this section of the spec hadn't been updated to match it |
 
 ### Deferred standards review (flagged 2026-08-29, not yet resolved)
 
-Researched alongside Decisions 10–11 above; intentionally **not** decided yet — each needs its own focused pass before it lands in the schema:
-- **Child data & privacy law** (GDPR-K consent age in France is 15, not the EU default 16; COPPA if the US market is ever added) — touches the `families`/`profiles`/consent flow directly, should be scoped together with Decision 9 (data export) rather than bolted on separately.
+Researched alongside Decisions 10–12 above; intentionally **not** decided yet — each needs its own focused pass before it lands in the schema:
 - **Accessibility (WCAG 2.2 AA)** — applies to the Next.js admin panel and the React Native app's own UI (contrast, text alternatives, focus order); most useful once there is real UI to audit against, not at the wireframe stage. `design/` wireframes should still be reviewed against WCAG contrast/target-size guidance before build.
 - **Interoperability packaging (SCORM/xAPI/full QTI export)** — no near-term need (this is a closed single-family app, not an LMS others plug content into); Decision 11 already keeps the door open by shaping the item model QTI-compatibly.
+- **COPPA** — only becomes relevant if/when a US market is added; not applicable to an MVP serving a French family.
 
 ### Earlier Decisions:
 - ✅ Tech Stack: Supabase + Next.js + React Native (Expo)
