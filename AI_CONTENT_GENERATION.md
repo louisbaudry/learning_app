@@ -49,6 +49,8 @@ Admin Panel (Next.js)                Supabase Edge Function              Claude 
 | `subject` | string | `general` | math, literacy, life_skills… (feeds `contents.subject`) |
 | `language` | enum | student's language (`fr`) | content language |
 | `difficulty` | 1–3 | 2 | maps to `contents.difficulty` |
+| `curriculum_cycle` | enum, optional | — | French Éduscol cycle (`cycle_1`–`cycle_4`); maps to `contents.curriculum_cycle`. Gives the model a concrete national-reference complexity/vocabulary target — see `SPECIFICATIONS.md` §11 Decision 10 for why this stays parent-chosen rather than derived from the student's age |
+| `curriculum_domain` | free text, optional | — | e.g. "Nombres et calculs"; maps to `contents.curriculum_domain` |
 | `question_count` | 3–10 | 5 | short sessions beat long ones for attention span |
 | `question_types` | multi-select | MC + fill-in-blank | image_identification only when the parent will attach images (MVP has no AI images — Decision 3) |
 | `learner_context` | free text, optional | stored per student | e.g. "Il adore le football et les animaux. Il lit des phrases courtes." Injected into the prompt to personalize examples |
@@ -98,6 +100,12 @@ PERSONALIZATION
 DIFFICULTY {difficulty}/3
 - 1: single-step recall/recognition. 2: one simple operation or association.
 - 3: two steps or less-familiar vocabulary. Stay within the topic.
+
+CURRICULUM REFERENCE (optional, only included when the parent set one)
+- French Éduscol cycle: {curriculum_cycle} — use this only as a loose
+  vocabulary/complexity reference, not a hard constraint: the learner's
+  actual level (see PERSONALIZATION) always takes priority over what is
+  typical for that cycle.
 ```
 
 The **user message** is then simply:
@@ -105,6 +113,7 @@ The **user message** is then simply:
 ```
 Create a lesson: {topic}
 Subject: {subject} | Questions: {question_count} | Types: {question_types}
+Curriculum: {curriculum_cycle} / {curriculum_domain}
 Extra instructions from the parent: {extra_instructions}
 ```
 

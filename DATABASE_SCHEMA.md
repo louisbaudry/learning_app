@@ -164,6 +164,7 @@ create table student_devices (
 
 ```sql
 create type content_status as enum ('draft', 'published', 'archived');
+create type curriculum_cycle as enum ('cycle_1', 'cycle_2', 'cycle_3', 'cycle_4'); -- French Éduscol cycles
 
 create table contents (
   id              uuid primary key default gen_random_uuid(),
@@ -172,6 +173,8 @@ create table contents (
   description     text not null default '',
   subject         text not null default 'general',  -- 'math', 'literacy', 'life_skills', ...
   difficulty      smallint not null default 2 check (difficulty between 1 and 3), -- 1 easy, 2 medium, 3 hard
+  curriculum_cycle curriculum_cycle,           -- optional Éduscol reference cycle, parent-chosen (see below)
+  curriculum_domain text,                      -- optional free-text "domaine" note, e.g. "Nombres et calculs"
   language        text not null default 'fr' check (language in ('en','fr','es','uk')),
   status          content_status not null default 'draft',
   is_ai_generated boolean not null default false,
@@ -186,6 +189,10 @@ create table contents (
 ```
 
 `subject` stays a free string in MVP (with suggested values in the UI) rather than an enum — parents will invent categories we can't predict; we can normalize later from real data.
+
+**Curriculum alignment (added 2026-08-29 — `SPECIFICATIONS.md` §11 Decision 10):** `curriculum_cycle`/`curriculum_domain` are optional metadata the parent sets per lesson, referencing France's official Éduscol cycles (Cycle 1 = maternelle, Cycle 2 = CP–CE1–CE2, Cycle 3 = CM1–CM2–6e, Cycle 4 = collège) so a lesson's level can be gauged against a national reference. Deliberately **not** derived from `students.date_of_birth`: the target learner (a teenage learner with Down Syndrome, `SPECIFICATIONS.md` §11 Decision 3) works at an instructional level that diverges from chronological grade, so auto-computing this from age would mislabel the content. It is descriptive/filterable metadata only — nothing in RLS, scoring, or assignment logic reads it.
+
+**Assessment item model (added 2026-08-29 — Decision 11):** `questions` + `question_options` below are deliberately shaped like IMS **QTI 3.0**'s `assessmentItem` (item body / choice interaction / response declaration / feedback), without adopting QTI's XML serialization or claiming LMS interoperability — see rationale in `SPECIFICATIONS.md` §11.
 
 ### 3.8 `questions`
 
@@ -400,5 +407,7 @@ create index on device_link_codes (code) where used_at is null;
 ## 9. Resolved Review Points (2026-08-21)
 
 1. **Attempts policy — DECIDED:** after a wrong answer the student sees a hint and can retry until correct (always ends on success). Scores and progress statistics count the **first attempt only**, so the data reflects his real level. The `attempt` column in `responses` records every try.
+
+   **Standards check (added 2026-08-29):** the research literature on hint-based scoring (e.g. Bolsinova et al., 2022) favors a partial-credit model — full credit unaided, partial credit with a hint, none if wrong — over binary first-attempt scoring, because it's more informative for calibrating item difficulty (IRT-style). We deliberately keep binary first-attempt scoring anyway: full IRT calibration needs item-response volume this single-family item bank will never produce, and a parent reading "correct on the first try" is a simpler, more honest signal than a partial-credit score for a non-standardized, formative-only assessment. `responses.attempt` already logs enough raw data (attempt count, hint shown, time) that this could be revisited without a schema change if item volume ever justified it.
 2. **Due dates — DECIDED:** soft. Due dates order the student's feed and drive "overdue" visibility on the parent dashboard, but assignments never lock and can always be completed late.
 3. **Timezone — DECIDED:** daily statistics computed in the family's stored timezone (`profiles.timezone`, Europe/Paris initially).
