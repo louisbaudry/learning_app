@@ -8,7 +8,7 @@
     "generate": "node generate.mjs"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^1",
-    "zod": "^3"
+    "@anthropic-ai/sdk": "^0.122.0",
+    "zod": "^4"
   }
 }
