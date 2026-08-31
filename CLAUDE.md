@@ -80,6 +80,13 @@ Read in this order for full context:
   plus `canvas.json` (layout/paging). These are source files for the `design`
   skill's canvas — re-seed and republish through that skill rather than
   hand-editing the published artifact.
+- `PRIVACY_POLICY.md` — draft parent-facing privacy policy grounded in
+  `SPECIFICATIONS.md` §11 Decision 12 (legal basis, sub-processors,
+  retention). **Not legal advice and not publishable as-is** — it has
+  placeholder sections (`À compléter`) and must be reviewed by a legal
+  professional before it's linked from the actual app. Keep it in sync with
+  Decision 12 and `DATABASE_SCHEMA.md` (e.g. `profiles.terms_accepted_at`)
+  when either changes.
 
 ## Commands
 
