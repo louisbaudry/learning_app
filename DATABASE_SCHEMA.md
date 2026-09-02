@@ -209,6 +209,7 @@ create table questions (
   position        integer not null,            -- order within the content
   prompt          text not null,               -- the question text
   image_url       text,                        -- optional image shown WITH the question
+  image_alt_text  text,                        -- required by the admin UI whenever image_url is set (WCAG 1.1.1)
   hint            text,                        -- optional hint (shown on demand / after wrong answer)
   explanation     text,                        -- shown after answering ("why")
   created_at      timestamptz not null default now(),
@@ -228,6 +229,7 @@ create table question_options (
   position        integer not null,
   label           text not null default '',    -- choice text (MC), accepted answer (fill-in-blank)
   image_url       text,                        -- for image_identification choices
+  image_alt_text  text,                        -- required by the admin UI whenever image_url is set (WCAG 1.1.1)
   is_correct      boolean not null default false,
   created_at      timestamptz not null default now(),
   unique (question_id, position)
@@ -238,6 +240,8 @@ Per type:
 - **multiple_choice:** 2–4 options, exactly one `is_correct = true`. Text in `label`.
 - **image_identification:** 2–4 options, images in `image_url`, one correct. (Question prompt like "Which one is the apple?")
 - **fill_in_blank:** every row is an *accepted correct answer* (`is_correct = true`), e.g. "sept", "7". Matching is case/accent-insensitive with trimming (normalization function in DB/app).
+
+**`image_alt_text` (added 2026-08-31, WCAG accessibility pass):** found while reviewing `design/QuestionImage.dc.html` against WCAG 1.1.1 (Non-text Content) — an `image_identification` question is, by construction, three or more images with no other textual cue to the correct answer, so a screen-reader or text-to-speech user (the app's own `settings.text_to_speech` preference, `DATABASE_SCHEMA.md` §3.4) has nothing to read without a text alternative per image. Decision 3 already commits to real uploaded photos rather than AI-generated images in MVP, so this can't be auto-generated either — it's a short free-text field the parent fills in next to each image upload in the admin panel, required whenever `image_url` is set (client-side validation, not a DB constraint, since existing rows shouldn't hard-fail).
 
 ### 3.10 `assignments` — content assigned to a student
 

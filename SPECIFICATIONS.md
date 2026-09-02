@@ -422,7 +422,7 @@ Response (Student's answer to a question)
 
 ## 7. Accessibility & Internationalization
 
-### 7.1 Accessibility (WCAG 2.1 AA Standard)
+### 7.1 Accessibility (target: WCAG 2.2 AA — updated from 2.1, see below)
 **For Students:**
 - Large, readable fonts (16px+ minimum, configurable to 24px+)
 - High contrast mode (dark mode, high contrast text)
@@ -435,6 +435,51 @@ Response (Student's answer to a question)
 - Standard web accessibility
 - Responsive design (mobile, tablet, desktop)
 - Screen reader support
+
+#### Wireframe review against WCAG 2.2 AA (2026-08-31)
+
+Standard bumped from 2.1 to **2.2 AA** — current version (2.1 is superseded)
+and adds Success Criterion 2.5.8 (Target Size, Minimum), directly relevant
+to a child-facing touch UI. The `design/` wireframes (`SPECIFICATIONS.md` →
+`CLAUDE.md` repo layout) were checked against contrast (1.4.3/1.4.11),
+non-text content (1.1.1), and target size (2.5.8). Findings, fixed directly
+in the `.dc.html` source files (re-seed/republish through the `design`
+skill when ready to update the live canvas):
+
+- **Fixed — insufficient text contrast:** three color pairs measured below
+  the 4.5:1 (normal text) / 3:1 (UI icons) thresholds: the inactive
+  bottom-nav label in `Main.dc.html` (2.91:1), the "Un indice ?" hint
+  prompt in `QuestionChoix.dc.html` (2.90:1, icon included), and "Revoir
+  mes réponses" in `Bravo.dc.html` (4.41:1, just under). All three swapped
+  for darker/lighter variants already used elsewhere in the palette
+  (`#6B645A`, `#A85F1E`, `#E3F3F5` respectively), each verified ≥4.5:1 (or
+  ≥3:1 where the large-text exception applies) by computing WCAG relative
+  luminance directly rather than eyeballing it.
+- **Fixed — missing text alternative for meaningful images:**
+  `QuestionImage.dc.html` (the `image_identification` question type) had
+  three answer images with no text alternative at all — a real gap given
+  the app's own `settings.text_to_speech` preference has nothing to read
+  for these without one. Added `role="img"`/`aria-label`/`<title>` to the
+  wireframe SVGs, and — the real fix — added an `image_alt_text` column to
+  both `questions` and `question_options` in `DATABASE_SCHEMA.md` §3.8–3.9,
+  required by the admin UI whenever an image is uploaded (Decision 3 rules
+  out AI-generated images in MVP, so this can't be auto-generated either;
+  see the schema note for detail).
+- **Flagged, not changed — low-severity / deliberate:** the "Archivée" row
+  styling in `Bibliotheque.dc.html` dims text to ~3:1, but is paired with a
+  redundant text badge ("Archivée"), which is the WCAG-compliant pattern
+  for de-emphasized state (color/contrast is not the *only* indicator);
+  search-input and form placeholder text across the admin screens sits
+  around 3:1, below the 4.5:1 best-practice for placeholder text (not a
+  hard WCAG requirement, but worth tightening whenever those screens are
+  actually built); the `[Nom de l'app]` placeholder text is bracket
+  template copy, not real content.
+- **Deferred to implementation** (can't be fixed in static wireframe HTML):
+  semantic HTML/native-component structure (headings, `<button>`,
+  `<label for>` — the wireframes are div soup by construction), keyboard
+  focus order, and real touch-target measurement (2.5.8's 24×24px CSS
+  pixel minimum) once these render as actual React Native / Next.js
+  components rather than fixed-size mockups.
 
 ### 7.2 Internationalization (i18n)
 **Phase 1:**
@@ -588,7 +633,7 @@ All foundational questions have been resolved with the project owner:
 ### Deferred standards review (flagged 2026-08-29, not yet resolved)
 
 Researched alongside Decisions 10–12 above; intentionally **not** decided yet — each needs its own focused pass before it lands in the schema:
-- **Accessibility (WCAG 2.2 AA)** — applies to the Next.js admin panel and the React Native app's own UI (contrast, text alternatives, focus order); most useful once there is real UI to audit against, not at the wireframe stage. `design/` wireframes should still be reviewed against WCAG contrast/target-size guidance before build.
+- **Accessibility (WCAG 2.2 AA) — partially resolved 2026-08-31:** the wireframe-level pass (contrast, missing image alt text) is done — see §7.1. What's still deferred is everything that only exists once there's real code: semantic HTML/native-component structure, keyboard focus order, and actual rendered touch-target measurement.
 - **Interoperability packaging (SCORM/xAPI/full QTI export)** — no near-term need (this is a closed single-family app, not an LMS others plug content into); Decision 11 already keeps the door open by shaping the item model QTI-compatibly.
 - **COPPA** — only becomes relevant if/when a US market is added; not applicable to an MVP serving a French family.
 
