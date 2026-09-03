@@ -50,7 +50,7 @@ Admin Panel (Next.js)                Supabase Edge Function              Claude 
 | `subject` | string | `general` | math, literacy, life_skills… (feeds `contents.subject`) |
 | `language` | enum | student's language (`fr`) | content language |
 | `difficulty` | 1–3 | 2 | maps to `contents.difficulty` |
-| `curriculum_cycle` | enum, optional | — | French Éduscol cycle (`cycle_1`–`cycle_4`); maps to `contents.curriculum_cycle`. Gives the model a concrete national-reference complexity/vocabulary target — see `SPECIFICATIONS.md` §11 Decision 10 for why this stays parent-chosen rather than derived from the student's age |
+| `curriculum_cycle` | enum, optional | — | French [Éduscol](https://eduscol.education.gouv.fr/) cycle (`cycle_1`–`cycle_4`); maps to `contents.curriculum_cycle`. Gives the model a concrete national-reference complexity/vocabulary target — see `SPECIFICATIONS.md` §11 Decision 10 for why this stays parent-chosen rather than derived from the student's age |
 | `curriculum_domain` | free text, optional | — | e.g. "Nombres et calculs"; maps to `contents.curriculum_domain` |
 | `question_count` | 3–10 | 5 | short sessions beat long ones for attention span |
 | `question_types` | multi-select | MC + fill-in-blank | image_identification only when the parent will attach images (MVP has no AI images — Decision 3) |

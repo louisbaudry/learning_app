@@ -79,7 +79,10 @@ Read in this order for full context:
   (5 mobile screens for the student, 4 admin-panel screens for the parent)
   plus `canvas.json` (layout/paging). These are source files for the `design`
   skill's canvas — re-seed and republish through that skill rather than
-  hand-editing the published artifact.
+  hand-editing the published artifact. Each artboard carries an HTML comment
+  at the top linking the external standard ([WCAG 2.2 AA](https://www.w3.org/TR/WCAG22/))
+  it's built to — keep that comment in sync with the actual contrast/alt-text
+  choices in the file when you edit one.
 - `PRIVACY_POLICY.md` — draft parent-facing privacy policy grounded in
   `SPECIFICATIONS.md` §11 Decision 12 (legal basis, sub-processors,
   retention). **Not legal advice and not publishable as-is** — it has
@@ -87,6 +90,23 @@ Read in this order for full context:
   professional before it's linked from the actual app. Keep it in sync with
   Decision 12 and `DATABASE_SCHEMA.md` (e.g. `profiles.terms_accepted_at`)
   when either changes.
+
+## Standards referenced
+
+Several design/schema decisions are grounded in named external standards —
+see `SPECIFICATIONS.md` §11 (Decisions 10–12) for the full rationale behind
+each. When you add or touch content related to one of these, link the
+standard the same way the existing code does (a comment at the top of the
+file, or an inline markdown link at first mention in prose) rather than
+naming it bare:
+
+| Standard | Link | Where it shows up |
+|---|---|---|
+| WCAG 2.2 (AA) | <https://www.w3.org/TR/WCAG22/> | `design/*.dc.html` header comments, `SPECIFICATIONS.md` §7.1 |
+| IMS/1EdTech QTI 3.0 | <https://www.1edtech.org/standards/qti/index> | `DATABASE_SCHEMA.md` §3.8–3.9 (`questions`/`question_options` shape), `experiments/generation-test/generate.mjs` |
+| Éduscol / Socle commun | <https://eduscol.education.gouv.fr/> | `DATABASE_SCHEMA.md` `curriculum_cycle`, `AI_CONTENT_GENERATION.md` request parameters |
+| GDPR (Art. 5, 8, 9) | <https://gdpr-info.eu/> | `SPECIFICATIONS.md` §11 Decision 12, `DATABASE_SCHEMA.md` `terms_accepted_at`/`disability_type` note, `PRIVACY_POLICY.md` |
+| COPPA | <https://www.ftc.gov/legal-library/browse/rules/childrens-online-privacy-protection-rule-coppa> | `SPECIFICATIONS.md` §11 deferred-standards list (US-only, not applicable to MVP) |
 
 ## Commands
 

@@ -40,7 +40,7 @@ ou médicale (type de handicap, etc.). C'est une décision de conception
 documentée dans `DATABASE_SCHEMA.md` §3.4 — la personnalisation passe par
 `learner_notes` (centres d'intérêt, style d'apprentissage) et non par une
 étiquette de diagnostic, justement pour éviter de traiter une donnée
-sensible au sens de l'article 9 du RGPD sans nécessité fonctionnelle. Merci
+sensible au sens de l'[article 9 du RGPD](https://gdpr-info.eu/art-9-gdpr/) sans nécessité fonctionnelle. Merci
 de ne pas saisir d'information médicale ou de diagnostic dans les champs
 libres (« centres d'intérêt de l'enfant », instructions supplémentaires) —
 ce ne sont pas des champs prévus ni protégés pour ce type de donnée.
@@ -60,8 +60,8 @@ ce ne sont pas des champs prévus ni protégés pour ce type de donnée.
 
 **Ce que nous ne faisons pas :** l'enfant ne crée jamais lui-même de compte
 et ne donne jamais lui-même son consentement à un service — voir §5. Il n'y a
-donc pas de mécanisme de consentement de l'enfant au sens de l'article 8 du
-RGPD à mettre en œuvre ici : la relation contractuelle est entre le parent et
+donc pas de mécanisme de consentement de l'enfant au sens de l'[article 8 du
+RGPD](https://gdpr-info.eu/art-8-gdpr/) à mettre en œuvre ici : la relation contractuelle est entre le parent et
 le service.
 
 ## 4. Qui reçoit ces données (sous-traitants)
@@ -109,7 +109,7 @@ tout moment :
 
 *À compléter avant publication : procédure et délai de réponse à une
 demande, coordonnées de contact, et — si applicable en France — mention du
-droit de réclamation auprès de la CNIL.*
+droit de réclamation auprès de la [CNIL](https://www.cnil.fr/).*
 
 ## 8. Sécurité
 
