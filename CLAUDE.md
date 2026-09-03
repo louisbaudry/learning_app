@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 currently contains no application code (no Supabase project, no Next.js admin
 panel, no React Native app). It contains the complete, decided design for all
 of those, plus one runnable Node.js experiment. Before writing app code,
-always ground changes in the four spec documents below — they are the source
+always ground changes in the five spec documents below — they are the source
 of truth, not a proposal.
 
 Read in this order for full context:
@@ -22,6 +22,8 @@ Read in this order for full context:
    structure, structured-output contract, model/A-B strategy, review
    workflow.
 4. `design/` — UI wireframes (see below).
+5. `TESTING.md` — the testing strategy for once application code exists:
+   risk-ordered priority tiers, tools per platform, CI plan.
 
 ## Key architectural decisions (do not re-litigate without asking)
 
@@ -90,15 +92,22 @@ Read in this order for full context:
   professional before it's linked from the actual app. Keep it in sync with
   Decision 12 and `DATABASE_SCHEMA.md` (e.g. `profiles.terms_accepted_at`)
   when either changes.
+- `TESTING.md` — the testing strategy grounded in `SPECIFICATIONS.md` §11
+  Decision 13: risk-ordered priority tiers (RLS policies and Edge Functions
+  first — they're the entire security model, per Decision 2), tools per
+  platform, and a CI plan. No test files exist yet because no application
+  code exists yet — this is what a feature PR follows once it does. Keep it
+  in sync with the tech stack (§8) and RLS policies (`DATABASE_SCHEMA.md`
+  §5) when either changes.
 
 ## Standards referenced
 
-Several design/schema decisions are grounded in named external standards —
-see `SPECIFICATIONS.md` §11 (Decisions 10–12) for the full rationale behind
-each. When you add or touch content related to one of these, link the
-standard the same way the existing code does (a comment at the top of the
-file, or an inline markdown link at first mention in prose) rather than
-naming it bare:
+Several design/schema/testing decisions are grounded in named external
+standards — see `SPECIFICATIONS.md` §11 (Decisions 10–13) for the full
+rationale behind each. When you add or touch content related to one of
+these, link the standard the same way the existing code does (a comment at
+the top of the file, or an inline markdown link at first mention in prose)
+rather than naming it bare:
 
 | Standard | Link | Where it shows up |
 |---|---|---|
@@ -107,6 +116,7 @@ naming it bare:
 | Éduscol / Socle commun | <https://eduscol.education.gouv.fr/> | `DATABASE_SCHEMA.md` `curriculum_cycle`, `AI_CONTENT_GENERATION.md` request parameters |
 | GDPR (Art. 5, 8, 9) | <https://gdpr-info.eu/> | `SPECIFICATIONS.md` §11 Decision 12, `DATABASE_SCHEMA.md` `terms_accepted_at`/`disability_type` note, `PRIVACY_POLICY.md` |
 | COPPA | <https://www.ftc.gov/legal-library/browse/rules/childrens-online-privacy-protection-rule-coppa> | `SPECIFICATIONS.md` §11 deferred-standards list (US-only, not applicable to MVP) |
+| ISO/IEC 25010 | <https://www.iso.org/standard/35733.html> | `TESTING.md` (priority-tier ordering, mapping to §12 success criteria) |
 
 ## Commands
 
