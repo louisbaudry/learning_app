@@ -14,7 +14,9 @@ of truth, not a proposal.
 Read in this order for full context:
 1. `SPECIFICATIONS.md` — vision, personas, features, architecture, all
    resolved decisions (§11: mobile framework, backend, images, AI review,
-   offline, business model, child login, co-parent access, data export).
+   offline, business model, child login, co-parent access, data export,
+   curriculum alignment, assessment item standard, child data legal basis,
+   testing strategy).
 2. `DATABASE_SCHEMA.md` — the complete PostgreSQL schema (Supabase), RLS
    policies, triggers, and resolved review points (retry/scoring, due dates,
    timezone).
@@ -115,6 +117,7 @@ rather than naming it bare:
 | IMS/1EdTech QTI 3.0 | <https://www.1edtech.org/standards/qti/index> | `DATABASE_SCHEMA.md` §3.8–3.9 (`questions`/`question_options` shape), `experiments/generation-test/generate.mjs` |
 | Éduscol / Socle commun | <https://eduscol.education.gouv.fr/> | `DATABASE_SCHEMA.md` `curriculum_cycle`, `AI_CONTENT_GENERATION.md` request parameters |
 | GDPR (Art. 5, 8, 9) | <https://gdpr-info.eu/> | `SPECIFICATIONS.md` §11 Decision 12, `DATABASE_SCHEMA.md` `terms_accepted_at`/`disability_type` note, `PRIVACY_POLICY.md` |
+| CNIL recommendations on minors | <https://www.cnil.fr/> | `PRIVACY_POLICY.md`, `SPECIFICATIONS.md` §11 Decision 12 (age-15 consent threshold rationale) |
 | COPPA | <https://www.ftc.gov/legal-library/browse/rules/childrens-online-privacy-protection-rule-coppa> | `SPECIFICATIONS.md` §11 deferred-standards list (US-only, not applicable to MVP) |
 | ISO/IEC 25010 | <https://www.iso.org/standard/35733.html> | `TESTING.md` (priority-tier ordering, mapping to §12 success criteria) |
 
