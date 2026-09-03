@@ -14,7 +14,7 @@
 3. **Children are not auth users.** Arthur never has an email/password. His phone is *linked* to his student profile via a one-time setup code (Decision 7) and gets a device-scoped session.
 4. **Content lifecycle.** Every piece of content has a status: `draft → published → archived`. AI-generated content always starts as `draft` (Decision 4).
 5. **Multilingual by design.** Content rows carry a `language` code. UI translations live in the apps, not the database.
-6. **Soft deletes** on user-facing data (`deleted_at`) for GDPR-friendly recovery windows; hard delete via scheduled cleanup.
+6. **Soft deletes** on user-facing data (`deleted_at`) for [GDPR](https://gdpr-info.eu/)-friendly recovery windows; hard delete via scheduled cleanup. Window is **30 days**: a family/student soft-deleted (or an account closed) can be restored within 30 days, after which a scheduled job permanently purges the rows — no indefinite retention (`SPECIFICATIONS.md` §11 Decision 12).
 7. **No billing concepts** (Decision 6) — but nothing in this schema would need to change to add a `plans` table keyed on `family_id` later.
 
 ---
@@ -54,14 +54,17 @@ Extends Supabase `auth.users` (1:1). Created by trigger on signup.
 
 ```sql
 create table profiles (
-  id            uuid primary key references auth.users(id) on delete cascade,
-  full_name     text not null default '',
-  language      text not null default 'fr' check (language in ('en','fr','es','uk')),
-  timezone      text not null default 'Europe/Paris',
-  created_at    timestamptz not null default now(),
-  updated_at    timestamptz not null default now()
+  id                  uuid primary key references auth.users(id) on delete cascade,
+  full_name           text not null default '',
+  language            text not null default 'fr' check (language in ('en','fr','es','uk')),
+  timezone            text not null default 'Europe/Paris',
+  terms_accepted_at   timestamptz,          -- GDPR Art. 5(2) accountability (https://gdpr-info.eu/art-5-gdpr/): when this parent accepted the privacy policy/terms
+  created_at          timestamptz not null default now(),
+  updated_at          timestamptz not null default now()
 );
 ```
+
+`terms_accepted_at` (added 2026-08-29 — `SPECIFICATIONS.md` §11 Decision 12): the app's legal basis for processing a child's data is the parent's own contract with the service, not a separate child consent flow (Arthur never signs up himself — Decision 7). This column is the accountability record of that acceptance, set during onboarding.
 
 ### 3.2 `families` — the tenancy unit
 
@@ -126,7 +129,7 @@ create table students (
 );
 ```
 
-Note: no `disability_type` column in MVP. It adds sensitive-data burden (GDPR special category) with no functional benefit — the app adapts via `settings`, not via a diagnosis label. Revisit only if a real feature needs it.
+Note: no `disability_type` column in MVP. It adds sensitive-data burden ([GDPR Art. 9](https://gdpr-info.eu/art-9-gdpr/) special category) with no functional benefit — the app adapts via `settings`, not via a diagnosis label. Revisit only if a real feature needs it.
 
 ### 3.5 `device_link_codes` — one-time setup codes (Decision 7)
 
@@ -164,6 +167,7 @@ create table student_devices (
 
 ```sql
 create type content_status as enum ('draft', 'published', 'archived');
+create type curriculum_cycle as enum ('cycle_1', 'cycle_2', 'cycle_3', 'cycle_4'); -- French Éduscol cycles
 
 create table contents (
   id              uuid primary key default gen_random_uuid(),
@@ -172,6 +176,8 @@ create table contents (
   description     text not null default '',
   subject         text not null default 'general',  -- 'math', 'literacy', 'life_skills', ...
   difficulty      smallint not null default 2 check (difficulty between 1 and 3), -- 1 easy, 2 medium, 3 hard
+  curriculum_cycle curriculum_cycle,           -- optional Éduscol reference cycle, parent-chosen (see below)
+  curriculum_domain text,                      -- optional free-text "domaine" note, e.g. "Nombres et calculs"
   language        text not null default 'fr' check (language in ('en','fr','es','uk')),
   status          content_status not null default 'draft',
   is_ai_generated boolean not null default false,
@@ -187,6 +193,10 @@ create table contents (
 
 `subject` stays a free string in MVP (with suggested values in the UI) rather than an enum — parents will invent categories we can't predict; we can normalize later from real data.
 
+**Curriculum alignment (added 2026-08-29 — `SPECIFICATIONS.md` §11 Decision 10):** `curriculum_cycle`/`curriculum_domain` are optional metadata the parent sets per lesson, referencing France's official [Éduscol](https://eduscol.education.gouv.fr/) cycles (Cycle 1 = maternelle, Cycle 2 = CP–CE1–CE2, Cycle 3 = CM1–CM2–6e, Cycle 4 = collège) so a lesson's level can be gauged against a national reference. Deliberately **not** derived from `students.date_of_birth`: the target learner (a teenage learner with Down Syndrome, `SPECIFICATIONS.md` §11 Decision 3) works at an instructional level that diverges from chronological grade, so auto-computing this from age would mislabel the content. It is descriptive/filterable metadata only — nothing in RLS, scoring, or assignment logic reads it.
+
+**Assessment item model (added 2026-08-29 — Decision 11):** `questions` + `question_options` below are deliberately shaped like [IMS/1EdTech **QTI 3.0**](https://www.1edtech.org/standards/qti/index)'s `assessmentItem` (item body / choice interaction / response declaration / feedback), without adopting QTI's XML serialization or claiming LMS interoperability — see rationale in `SPECIFICATIONS.md` §11.
+
 ### 3.8 `questions`
 
 ```sql
@@ -199,6 +209,7 @@ create table questions (
   position        integer not null,            -- order within the content
   prompt          text not null,               -- the question text
   image_url       text,                        -- optional image shown WITH the question
+  image_alt_text  text,                        -- required by the admin UI whenever image_url is set (WCAG 1.1.1)
   hint            text,                        -- optional hint (shown on demand / after wrong answer)
   explanation     text,                        -- shown after answering ("why")
   created_at      timestamptz not null default now(),
@@ -218,6 +229,7 @@ create table question_options (
   position        integer not null,
   label           text not null default '',    -- choice text (MC), accepted answer (fill-in-blank)
   image_url       text,                        -- for image_identification choices
+  image_alt_text  text,                        -- required by the admin UI whenever image_url is set (WCAG 1.1.1)
   is_correct      boolean not null default false,
   created_at      timestamptz not null default now(),
   unique (question_id, position)
@@ -228,6 +240,8 @@ Per type:
 - **multiple_choice:** 2–4 options, exactly one `is_correct = true`. Text in `label`.
 - **image_identification:** 2–4 options, images in `image_url`, one correct. (Question prompt like "Which one is the apple?")
 - **fill_in_blank:** every row is an *accepted correct answer* (`is_correct = true`), e.g. "sept", "7". Matching is case/accent-insensitive with trimming (normalization function in DB/app).
+
+**`image_alt_text` (added 2026-08-31, [WCAG 2.2](https://www.w3.org/TR/WCAG22/) accessibility pass):** found while reviewing `design/QuestionImage.dc.html` against [WCAG 1.1.1 (Non-text Content)](https://www.w3.org/WAI/WCAG22/Understanding/non-text-content.html) — an `image_identification` question is, by construction, three or more images with no other textual cue to the correct answer, so a screen-reader or text-to-speech user (the app's own `settings.text_to_speech` preference, `DATABASE_SCHEMA.md` §3.4) has nothing to read without a text alternative per image. Decision 3 already commits to real uploaded photos rather than AI-generated images in MVP, so this can't be auto-generated either — it's a short free-text field the parent fills in next to each image upload in the admin panel, required whenever `image_url` is set (client-side validation, not a DB constraint, since existing rows shouldn't hard-fail).
 
 ### 3.10 `assignments` — content assigned to a student
 
@@ -400,5 +414,7 @@ create index on device_link_codes (code) where used_at is null;
 ## 9. Resolved Review Points (2026-08-21)
 
 1. **Attempts policy — DECIDED:** after a wrong answer the student sees a hint and can retry until correct (always ends on success). Scores and progress statistics count the **first attempt only**, so the data reflects his real level. The `attempt` column in `responses` records every try.
+
+   **Standards check (added 2026-08-29):** the research literature on hint-based scoring (e.g. Bolsinova et al., 2022) favors a partial-credit model — full credit unaided, partial credit with a hint, none if wrong — over binary first-attempt scoring, because it's more informative for calibrating item difficulty (IRT-style). We deliberately keep binary first-attempt scoring anyway: full IRT calibration needs item-response volume this single-family item bank will never produce, and a parent reading "correct on the first try" is a simpler, more honest signal than a partial-credit score for a non-standardized, formative-only assessment. `responses.attempt` already logs enough raw data (attempt count, hint shown, time) that this could be revisited without a schema change if item volume ever justified it.
 2. **Due dates — DECIDED:** soft. Due dates order the student's feed and drive "overdue" visibility on the parent dashboard, but assignments never lock and can always be completed late.
 3. **Timezone — DECIDED:** daily statistics computed in the family's stored timezone (`profiles.timezone`, Europe/Paris initially).

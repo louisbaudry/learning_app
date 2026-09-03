@@ -19,7 +19,12 @@ import { fileURLToPath } from "node:url";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // ---------------------------------------------------------------------------
-// Output contract (mirrors AI_CONTENT_GENERATION.md §5 and the DB schema)
+// Output contract (mirrors AI_CONTENT_GENERATION.md §5 and the DB schema).
+// The question/options/is_correct/hint/explanation shape follows IMS/1EdTech
+// QTI 3.0's assessmentItem model (item body / choice interaction / response
+// declaration / feedback) without adopting QTI's XML serialization — see
+// https://www.1edtech.org/standards/qti/index and SPECIFICATIONS.md §11
+// Decision 11 for why.
 
 const GeneratedOption = z.object({
   label: z.string(),

@@ -38,6 +38,7 @@ Admin Panel (Next.js)                Supabase Edge Function              Claude 
 - The **Claude API key lives only in the Edge Function** (Supabase secret). It never reaches the browser or the mobile app.
 - Every generation writes an `ai_generations` row: prompt, model, raw response, outcome. This is our A/B testing dataset and debugging trail.
 - Generation is synchronous from the parent's point of view (~10–30 s with a progress indicator). If it fails, the row records the error and the UI offers retry.
+- **Privacy (added 2026-08-29 — `SPECIFICATIONS.md` §11 Decision 12):** the prompt sent to the Claude API can include `learner_notes`/`topic`/`extra_instructions` about a child, so Anthropic is a disclosed sub-processor (must appear in the privacy policy). Use the API's zero/no-training-retention option if/when available for this account, and never send `disability_type`-like data — there is none in the schema to send, and the admin panel's `learner_notes` field should carry inline copy telling the parent it's for interests/learning style, not diagnosis or medical information.
 
 ---
 
@@ -49,6 +50,8 @@ Admin Panel (Next.js)                Supabase Edge Function              Claude 
 | `subject` | string | `general` | math, literacy, life_skills… (feeds `contents.subject`) |
 | `language` | enum | student's language (`fr`) | content language |
 | `difficulty` | 1–3 | 2 | maps to `contents.difficulty` |
+| `curriculum_cycle` | enum, optional | — | French [Éduscol](https://eduscol.education.gouv.fr/) cycle (`cycle_1`–`cycle_4`); maps to `contents.curriculum_cycle`. Gives the model a concrete national-reference complexity/vocabulary target — see `SPECIFICATIONS.md` §11 Decision 10 for why this stays parent-chosen rather than derived from the student's age |
+| `curriculum_domain` | free text, optional | — | e.g. "Nombres et calculs"; maps to `contents.curriculum_domain` |
 | `question_count` | 3–10 | 5 | short sessions beat long ones for attention span |
 | `question_types` | multi-select | MC + fill-in-blank | image_identification only when the parent will attach images (MVP has no AI images — Decision 3) |
 | `learner_context` | free text, optional | stored per student | e.g. "Il adore le football et les animaux. Il lit des phrases courtes." Injected into the prompt to personalize examples |
@@ -98,6 +101,12 @@ PERSONALIZATION
 DIFFICULTY {difficulty}/3
 - 1: single-step recall/recognition. 2: one simple operation or association.
 - 3: two steps or less-familiar vocabulary. Stay within the topic.
+
+CURRICULUM REFERENCE (optional, only included when the parent set one)
+- French Éduscol cycle: {curriculum_cycle} — use this only as a loose
+  vocabulary/complexity reference, not a hard constraint: the learner's
+  actual level (see PERSONALIZATION) always takes priority over what is
+  typical for that cycle.
 ```
 
 The **user message** is then simply:
@@ -105,6 +114,7 @@ The **user message** is then simply:
 ```
 Create a lesson: {topic}
 Subject: {subject} | Questions: {question_count} | Types: {question_types}
+Curriculum: {curriculum_cycle} / {curriculum_domain}
 Extra instructions from the parent: {extra_instructions}
 ```
 
