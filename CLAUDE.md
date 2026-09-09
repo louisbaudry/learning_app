@@ -4,12 +4,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project status
 
-**Phase 0 — specifications and design, not yet implemented.** This repository
-currently contains no application code (no Supabase project, no Next.js admin
-panel, no React Native app). It contains the complete, decided design for all
-of those, plus one runnable Node.js experiment. Before writing app code,
-always ground changes in the five spec documents below — they are the source
-of truth, not a proposal.
+**Phase 1 — backend implementation started.** The design phase (Phase 0) is
+complete and reviewed. There is now a real Supabase project (`learning-app`,
+ref `raamrmdjfmzbtaczvfbu`) with the schema, RLS policies, triggers, and
+storage buckets from `DATABASE_SCHEMA.md` applied via `supabase/migrations/`
+— see `README.md`'s "Backend (Supabase)" section for the project's URL/keys
+and what's still missing (the `redeem_link_code` and AI-generation Edge
+Functions). The Next.js admin panel and React Native app do not exist yet.
+Before writing more app code, always ground changes in the five spec
+documents below — they are the source of truth, not a proposal, and any
+schema change belongs in `DATABASE_SCHEMA.md` *and* a new migration file in
+the same change, never one without the other.
 
 Read in this order for full context:
 1. `SPECIFICATIONS.md` — vision, personas, features, architecture, all
@@ -67,6 +72,16 @@ Read in this order for full context:
 - `SPECIFICATIONS.md`, `DATABASE_SCHEMA.md`, `AI_CONTENT_GENERATION.md` —
   the specs (see above). Edit these when a design decision changes, and log
   the decision inline rather than deleting the prior reasoning.
+- `supabase/migrations/` — the applied SQL migrations for the `learning-app`
+  Supabase project (ref `raamrmdjfmzbtaczvfbu`), implementing
+  `DATABASE_SCHEMA.md` §3-§7. Numbered by timestamp and applied in that
+  order; two later files (`..._security_hardening.sql`, `..._rls_performance.sql`)
+  are advisor-driven fixes layered on top rather than edits to the earlier
+  files, so the history of *why* each policy looks the way it does stays
+  readable. When `DATABASE_SCHEMA.md` changes, add a new migration file here
+  in the same change — never edit an already-applied migration file in
+  place, and never hand-edit the schema directly against the project outside
+  of a migration.
 - `prompts/lesson-generation/v1.md` — the canonical, versioned source of the
   AI lesson-generation system prompt. **Never edit a version file in place**
   once it's been used to generate lessons under test — create `v2.md`, etc.,

@@ -7,13 +7,36 @@ for their children, assign it as homework, and track progress remotely.
 keep teaching him between limited visits. Designed from the start to scale
 to other families — including, eventually, families in Ukraine and beyond.
 
-## Status: Phase 0 — Specifications & Design
+## Status: Phase 1 — Backend implementation started
 
-No application code exists yet. This repository currently holds the
-complete, decided design: architecture, database schema, AI content
-generation design, UI wireframes, and a working prompt-validation harness.
-Development begins once the AI-generated content quality is validated (see
-below) and the specs are reviewed.
+The design phase (architecture, database schema, AI content generation
+design, UI wireframes, prompt-validation harness) is complete and reviewed.
+The Supabase backend from `DATABASE_SCHEMA.md` now exists as real
+infrastructure: project `learning-app` (`https://raamrmdjfmzbtaczvfbu.supabase.co`),
+schema + RLS policies + triggers applied via the migrations in
+`supabase/migrations/`. The Next.js admin panel and the Expo mobile app have
+not been started yet.
+
+## Backend (Supabase)
+
+- **Project:** `learning-app`, ref `raamrmdjfmzbtaczvfbu`, region `eu-west-3`.
+- **Migrations:** `supabase/migrations/*.sql`, applied in filename order.
+  They implement `DATABASE_SCHEMA.md` §3-§7 (tables, indexes, RLS, the
+  `submit_answer()`/`normalize_answer()`/`handle_new_user()` functions and
+  triggers, storage buckets) plus a couple of hardening passes
+  (`..._security_hardening.sql`, `..._rls_performance.sql`) driven by
+  Supabase's own security/performance advisors — see those files' header
+  comments for what each fixed and why.
+- **Client config:** project URL and the `sb_publishable_...` key above are
+  safe to use directly from client code (mobile app / admin panel) — they're
+  publishable, not secret. The service role key (needed only by the not-yet-
+  written `redeem_link_code` Edge Function, per `DATABASE_SCHEMA.md` §3.5)
+  is never checked into this repo.
+- **Not yet implemented:** the `redeem_link_code` Edge Function (needs the
+  Auth Admin API to create the anonymous device user — can't be a plain SQL
+  function, see the comment at the end of
+  `supabase/migrations/20260909200006_functions_and_triggers.sql`), and any
+  AI-generation Edge Function from `AI_CONTENT_GENERATION.md`.
 
 ## Documentation
 
