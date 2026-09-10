@@ -7,28 +7,32 @@ for their children, assign it as homework, and track progress remotely.
 keep teaching him between limited visits. Designed from the start to scale
 to other families — including, eventually, families in Ukraine and beyond.
 
-## Status: Phase 1 — Foundation & Infrastructure
+## Status: Phase 1 — Foundation & Infrastructure (🚀 Device Linking Ready)
 
 ✅ **Phase 0 Complete:** Full specifications, database design, UI wireframes  
 ✅ **Phase 1 In Progress:**
   - Supabase PostgreSQL database with Row Level Security ✅
   - Monorepo structure with npm workspaces ✅
-  - Next.js admin panel with Supabase Auth ✅
+  - Next.js admin panel with Supabase Auth + Students management ✅
   - Shared TypeScript types package ✅
-  - Edge Functions for device linking (🚧 in development)
+  - Device linking Edge Function: **DEPLOYED & LIVE** ✅
 
 **What's implemented:**
 - Complete Supabase schema with 13 tables, RLS policies, triggers, indexes
-- Admin panel: login, signup, family dashboard
+- Admin panel: login, signup, family dashboard, **student management, device code generation**
 - Mobile app placeholder (Expo scaffolded)
 - Shared types for cross-app type safety
+- **redeem-link-code Edge Function** deployed to production
+  - One-time device link codes (48-hour expiry)
+  - Creates anonymous auth users for child devices
+  - Complete end-to-end testable via curl or Supabase Studio
 
 **Next up:**
-- Device linking Edge Function (redeem one-time codes)
-- Image upload & signed URL handling
-- Admin panel features (create students, content editor, assign lessons)
-- Mobile app full implementation
-- Claude API integration for lesson generation
+- Mobile app: Device linking UI (code entry screen)
+- Image upload & signed URL handling (upload-image Edge Function)
+- Content editor & lesson assignment in admin panel
+- Claude API integration for lesson generation (generate-content Edge Function)
+- Mobile app: Lesson dashboard and question rendering
 
 ## Documentation
 
@@ -85,6 +89,30 @@ index.
   starting with French and English
 
 See `SPECIFICATIONS.md` §8 and §11 for the full rationale behind each choice.
+
+## Testing the Device Linking Flow
+
+The complete device linking flow is now testable end-to-end:
+
+```bash
+# 1. Start admin panel (http://localhost:3000)
+npm run dev -w @learning-app/admin
+
+# 2. Sign up, add a student, generate a device link code
+
+# 3. Test code redemption via curl
+curl -X POST https://raamrmdjfmzbtaczvfbu.supabase.co/functions/v1/redeem-link-code \
+  -H "Content-Type: application/json" \
+  -d '{"code":"TIGRE-7342","device_name":"Samsung Galaxy A54"}'
+```
+
+See [`DEVICE_LINKING_TEST.md`](DEVICE_LINKING_TEST.md) for the complete testing guide, including:
+- Step-by-step parent + child flow
+- Error scenario testing
+- RLS verification
+- Database state inspection
+
+---
 
 ## Validating AI-generated content
 
