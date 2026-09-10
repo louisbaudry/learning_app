@@ -117,17 +117,17 @@ Read in this order for full context:
     change adds a numbered `supabase/migrations/*.sql` file in the same
     change as the `DATABASE_SCHEMA.md` update, applied in filename order,
     never edited in place once applied.
-  - **Known bug (found 2026-09-10, not yet fixed):** the deployed
+  - **Bug fixed (found and fixed 2026-09-10):** the deployed
     `submit_answer()` function (migration `02_create_helper_functions_and_rls`)
-    selects a column `explanation` from `question_options` for
+    selected a column `explanation` from `question_options` for
     multiple_choice/image_identification answers — but `question_options`
     has no `explanation` column (only `questions` does; see
     `DATABASE_SCHEMA.md` §3.8–3.9). This is plpgsql, so it wasn't caught at
-    function-creation time; it will raise `column "explanation" does not
-    exist` the first time a student answers a non-fill-in-blank question.
-    Needs a follow-up migration once decided whether to add
-    `question_options.explanation` or have the function fall back to
-    `questions.explanation` for all types.
+    function-creation time; it would have raised `column "explanation" does
+    not exist` the first time a student answered a non-fill-in-blank
+    question. Fixed in migration `05_fix_submit_answer_explanation_column`
+    (applied to `dyjntcuovsoyhbkxnmih` and committed) — `explanation` is now
+    always read from `questions`, for all question types.
 
 ## Standards referenced
 
