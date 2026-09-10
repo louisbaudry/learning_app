@@ -9,6 +9,14 @@ to other families — including, eventually, families in Ukraine and beyond.
 
 ## Status: Phase 1 — Foundation & Infrastructure
 
+**Supabase project (canonical):** `dyjntcuovsoyhbkxnmih`
+(`https://dyjntcuovsoyhbkxnmih.supabase.co`) — this is the one and only
+backend for this app. A second Supabase project was briefly created in
+parallel during early Phase 1 work and has since been torn down; if you
+ever see a different project ref in a branch, PR, or note, it's stale —
+this is the one to build against. See `SUPABASE_SETUP.md` for what's
+deployed to it.
+
 ✅ **Phase 0 Complete:** Full specifications, database design, UI wireframes  
 ✅ **Phase 1 In Progress:**
   - Supabase PostgreSQL database with Row Level Security ✅

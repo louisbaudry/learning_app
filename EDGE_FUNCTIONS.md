@@ -109,6 +109,19 @@ Currently implemented as a PostgreSQL `security_definer` function (`submit_answe
 4. Parent uploads directly to Supabase Storage
 5. Function returns download URL (presigned GET, time-limited)
 
+### 4. `generate-lesson` (AI Content Generation)
+
+**Status:** 🚧 Design phase — see `AI_CONTENT_GENERATION.md` for the full
+design (request parameters, system prompt, structured-output contract,
+model/A-B strategy, review workflow). Holds the only copy of
+`ANTHROPIC_API_KEY`; everything else it does with the database should run
+scoped to the calling parent's own JWT so ordinary RLS decides access,
+rather than the function using the service role key for reads/writes it
+doesn't need elevated privileges for.
+
+**Reference:** `AI_CONTENT_GENERATION.md` §2–§8, `DATABASE_SCHEMA.md`
+(`contents`/`questions`/`question_options`/`ai_generations`)
+
 ---
 
 ## Deployment
@@ -223,7 +236,8 @@ supabase functions logs redeem-link-code --since 2024-09-10
    - Generate signed URLs
    - Validate parent/family access via RLS
 
-3. **Implement `generate-content` function**
+3. **Implement `generate-lesson` function** (name matches the architecture
+   diagram in `AI_CONTENT_GENERATION.md` §2 — keep the two in sync)
    - Call Claude API with lesson generation prompt
    - Validate response structure
    - Store in `ai_generations` audit table

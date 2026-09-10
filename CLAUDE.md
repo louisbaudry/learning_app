@@ -11,6 +11,15 @@ done. Application code now exists:
 - ✅ Next.js admin panel with Supabase Auth (scaffold complete)
 - 🚧 Edge Functions for device linking, image uploads, AI generation
 
+**The canonical Supabase project is `dyjntcuovsoyhbkxnmih`**
+(`https://dyjntcuovsoyhbkxnmih.supabase.co`, see `SUPABASE_SETUP.md`). A
+second project got created in parallel by mistake early in Phase 1, when two
+sessions independently built the backend at the same time without either
+knowing about the other; it has been torn down. **Never create another
+Supabase project for this app** — if a schema change is needed, apply it to
+this one (and record it — see the `supabase/` entry below for the current
+gap there).
+
 Always ground changes in the spec documents below — they are the source of
 truth. When implementing features, update the relevant spec (DATABASE_SCHEMA.md,
 EDGE_FUNCTIONS.md, etc.) at the same time, rather than drifting from design.
@@ -100,6 +109,15 @@ Read in this order for full context:
   - `redeem-link-code/` — Device linking (validate code, create auth user)
   - `submit-answer/` — Answer validation wrapper (planned)
   - `upload-image/` — Image upload & signed URLs (planned)
+  - `generate-lesson/` — AI lesson generation (planned, see `AI_CONTENT_GENERATION.md`)
+  - **Known gap:** there is no `supabase/migrations/` here — the schema on
+    `dyjntcuovsoyhbkxnmih` (§ above) was applied directly rather than via
+    saved migration files, so the repo has no record of the exact DDL that
+    produced it beyond `SUPABASE_SETUP.md`'s summary. Any *new* schema
+    change should start the convention properly: add a numbered
+    `supabase/migrations/*.sql` file in the same change as the
+    `DATABASE_SCHEMA.md` update, applied in filename order, never edited in
+    place once applied.
 
 ## Standards referenced
 
