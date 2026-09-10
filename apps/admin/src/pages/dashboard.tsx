@@ -98,12 +98,38 @@ export default function Dashboard() {
         {families.length === 0 ? (
           <p>No families yet. Create one to get started!</p>
         ) : (
-          <ul>
+          <ul style={{ listStyle: 'none', padding: 0 }}>
             {families.map((family) => (
-              <li key={family.id}>
-                <strong>{family.name}</strong>
+              <li
+                key={family.id}
+                style={{
+                  padding: '1rem',
+                  marginBottom: '1rem',
+                  border: '1px solid #ddd',
+                  borderRadius: '4px',
+                  backgroundColor: '#fafafa',
+                }}
+              >
+                <strong style={{ fontSize: '1.1rem' }}>{family.name}</strong>
                 <br />
-                <small>{family.id}</small>
+                <small style={{ color: '#666', display: 'block', marginTop: '0.5rem' }}>{family.id}</small>
+                <div style={{ marginTop: '0.75rem' }}>
+                  <a
+                    href={`/families/${family.id}/students`}
+                    style={{
+                      display: 'inline-block',
+                      padding: '0.5rem 1rem',
+                      backgroundColor: '#007bff',
+                      color: 'white',
+                      textDecoration: 'none',
+                      borderRadius: '4px',
+                      marginRight: '0.5rem',
+                    }}
+                  >
+                    Manage Students
+                  </a>
+                  <button style={{ marginLeft: '0.5rem' }}>Edit Family</button>
+                </div>
               </li>
             ))}
           </ul>
