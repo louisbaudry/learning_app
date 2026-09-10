@@ -82,6 +82,13 @@ Read in this order for full context:
   in the same change — never edit an already-applied migration file in
   place, and never hand-edit the schema directly against the project outside
   of a migration.
+- `supabase/functions/` — deployed Edge Functions (`redeem-link-code`,
+  `generate-lesson`). Both are deployed straight from these files via the
+  Supabase MCP tools (there's no local Deno toolchain wired up in this
+  environment) — after editing one, redeploy it the same way rather than
+  leaving the deployed version out of sync with the repo. `generate-lesson`
+  needs the `ANTHROPIC_API_KEY` secret set on the project (see README.md);
+  it is never stored in this repo.
 - `prompts/lesson-generation/v1.md` — the canonical, versioned source of the
   AI lesson-generation system prompt. **Never edit a version file in place**
   once it's been used to generate lessons under test — create `v2.md`, etc.,

@@ -29,14 +29,30 @@ not been started yet.
   comments for what each fixed and why.
 - **Client config:** project URL and the `sb_publishable_...` key above are
   safe to use directly from client code (mobile app / admin panel) — they're
-  publishable, not secret. The service role key (needed only by the not-yet-
-  written `redeem_link_code` Edge Function, per `DATABASE_SCHEMA.md` §3.5)
-  is never checked into this repo.
-- **Not yet implemented:** the `redeem_link_code` Edge Function (needs the
-  Auth Admin API to create the anonymous device user — can't be a plain SQL
-  function, see the comment at the end of
-  `supabase/migrations/20260909200006_functions_and_triggers.sql`), and any
-  AI-generation Edge Function from `AI_CONTENT_GENERATION.md`.
+  publishable, not secret. The service role key is never checked into this
+  repo (only `redeem-link-code`, below, uses it, and only from inside the
+  Edge Function runtime where it's injected automatically).
+- **Edge Functions:** `supabase/functions/`, deployed to the project above.
+  - `redeem-link-code` (`verify_jwt: false` — the device has no session yet;
+    the one-time code is the credential) trades a `device_link_codes` code
+    for a real anonymous-auth session, per `DATABASE_SCHEMA.md` §3.5/§5.4.
+  - `generate-lesson` (`verify_jwt: true`) is the `AI_CONTENT_GENERATION.md`
+    integration: calls the Claude API (the only place `ANTHROPIC_API_KEY`
+    lives) and writes the resulting lesson as a `draft` content row. It
+    otherwise runs as the calling parent's own JWT, so ordinary RLS — not
+    the function — decides what they can read/write.
+  - **Required manual step:** `generate-lesson` needs the `ANTHROPIC_API_KEY`
+    secret set on the project (`supabase secrets set ANTHROPIC_API_KEY=sk-ant-...
+    --project-ref raamrmdjfmzbtaczvfbu`, or via the dashboard) — this repo
+    only ever holds that key as an env var locally
+    (`experiments/generation-test`), never committed, and the same rule
+    applies to the deployed secret.
+- **Not yet implemented:** the Next.js admin panel and the Expo mobile app
+  (no client code yet — see below), and the pre-launch French pedagogical
+  validation from `AI_CONTENT_GENERATION.md` §9.3 (run `generate-lesson`
+  against ~10 real requests and have it reviewed before Arthur sees any of
+  it — the `experiments/generation-test` harness already validates the
+  *prompt*; this validates the deployed function end-to-end).
 
 ## Documentation
 
