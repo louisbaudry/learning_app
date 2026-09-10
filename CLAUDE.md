@@ -4,12 +4,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project status
 
-**Phase 0 — specifications and design, not yet implemented.** This repository
-currently contains no application code (no Supabase project, no Next.js admin
-panel, no React Native app). It contains the complete, decided design for all
-of those, plus one runnable Node.js experiment. Before writing app code,
-always ground changes in the five spec documents below — they are the source
-of truth, not a proposal.
+**Phase 1 — Foundation & Infrastructure.** The complete design (Phase 0) is
+done. Application code now exists:
+- ✅ Supabase PostgreSQL database with RLS, triggers, indexes (deployed)
+- ✅ Monorepo with npm workspaces (admin panel, mobile app, shared types)
+- ✅ Next.js admin panel with Supabase Auth (scaffold complete)
+- 🚧 Edge Functions for device linking, image uploads, AI generation
+
+Always ground changes in the spec documents below — they are the source of
+truth. When implementing features, update the relevant spec (DATABASE_SCHEMA.md,
+EDGE_FUNCTIONS.md, etc.) at the same time, rather than drifting from design.
 
 Read in this order for full context:
 1. `SPECIFICATIONS.md` — vision, personas, features, architecture, all
@@ -64,43 +68,38 @@ Read in this order for full context:
 
 ## Repository layout
 
+### Specifications & Design (Phase 0)
+
 - `SPECIFICATIONS.md`, `DATABASE_SCHEMA.md`, `AI_CONTENT_GENERATION.md` —
-  the specs (see above). Edit these when a design decision changes, and log
-  the decision inline rather than deleting the prior reasoning.
-- `prompts/lesson-generation/v1.md` — the canonical, versioned source of the
-  AI lesson-generation system prompt. **Never edit a version file in place**
-  once it's been used to generate lessons under test — create `v2.md`, etc.,
-  so `ai_generations.prompt_version` (once implemented) stays meaningful for
-  A/B comparisons.
-- `experiments/generation-test/` — a standalone Node.js harness (see
-  Commands below) that generates real French lessons with the current
-  prompt and validates them against the same rules the future Edge Function
-  will enforce (`AI_CONTENT_GENERATION.md` §5). Its `generate.mjs` embeds a
-  copy of the v1 prompt text — if you edit `prompts/lesson-generation/v1.md`,
-  update the matching constants in `generate.mjs` too (or point it at a new
-  version file) so the two don't silently drift.
-- `design/` — the UI wireframes as Claude Design `.dc.html` artboards
-  (5 mobile screens for the student, 4 admin-panel screens for the parent)
-  plus `canvas.json` (layout/paging). These are source files for the `design`
-  skill's canvas — re-seed and republish through that skill rather than
-  hand-editing the published artifact. Each artboard carries an HTML comment
-  at the top linking the external standard ([WCAG 2.2 AA](https://www.w3.org/TR/WCAG22/))
-  it's built to — keep that comment in sync with the actual contrast/alt-text
-  choices in the file when you edit one.
-- `PRIVACY_POLICY.md` — draft parent-facing privacy policy grounded in
-  `SPECIFICATIONS.md` §11 Decision 12 (legal basis, sub-processors,
-  retention). **Not legal advice and not publishable as-is** — it has
-  placeholder sections (`À compléter`) and must be reviewed by a legal
-  professional before it's linked from the actual app. Keep it in sync with
-  Decision 12 and `DATABASE_SCHEMA.md` (e.g. `profiles.terms_accepted_at`)
-  when either changes.
-- `TESTING.md` — the testing strategy grounded in `SPECIFICATIONS.md` §11
-  Decision 13: risk-ordered priority tiers (RLS policies and Edge Functions
-  first — they're the entire security model, per Decision 2), tools per
-  platform, and a CI plan. No test files exist yet because no application
-  code exists yet — this is what a feature PR follows once it does. Keep it
-  in sync with the tech stack (§8) and RLS policies (`DATABASE_SCHEMA.md`
-  §5) when either changes.
+  the specs. Edit these when a design decision changes, and log the decision
+  inline rather than deleting the prior reasoning.
+- `PRIVACY_POLICY.md` — draft parent-facing privacy policy (not legal advice,
+  pending professional review). Keep in sync with `DATABASE_SCHEMA.md` when
+  either changes.
+- `TESTING.md` — testing strategy (risk-ordered priority tiers, tools per
+  platform, CI plan). Update when tech stack or RLS policies change.
+- `prompts/lesson-generation/v1.md` — canonical, versioned system prompt.
+  **Never edit a version file in place** — create `v2.md`, etc.
+- `experiments/generation-test/` — Node.js harness for validating AI output.
+- `design/` — UI wireframes (5 mobile + 4 admin screens, WCAG 2.2 AA).
+
+### Infrastructure & Development (Phase 1)
+
+- `SUPABASE_SETUP.md` — database deployment and schema reference.
+- `MONOREPO_SETUP.md` — monorepo structure and development workflow.
+- `EDGE_FUNCTIONS.md` — server-side functions (device linking, uploads, AI).
+- `apps/admin/` — Next.js admin panel (TypeScript, Supabase Auth).
+  - `src/pages/` — Next.js pages (login, dashboard, ...)
+  - `src/lib/supabase.ts` — Supabase client initialization
+  - `tsconfig.json`, `next.config.js`, `.env.example`
+- `apps/mobile/` — React Native + Expo placeholder (to be scaffolded).
+- `packages/shared-types/` — TypeScript interfaces for database models, enums,
+  API types. Imported by both admin panel and mobile app.
+- `packages/supabase-client/` — Shared Supabase utilities (future).
+- `supabase/functions/` — Edge Functions (TypeScript).
+  - `redeem-link-code/` — Device linking (validate code, create auth user)
+  - `submit-answer/` — Answer validation wrapper (planned)
+  - `upload-image/` — Image upload & signed URLs (planned)
 
 ## Standards referenced
 
@@ -123,25 +122,47 @@ rather than naming it bare:
 
 ## Commands
 
-There is no app build/lint/test yet — the only runnable code is the AI
-generation test harness:
+### Phase 1: Admin Panel & Infrastructure
+
+```bash
+# Install all dependencies (monorepo root)
+npm install
+
+# Run the admin panel (http://localhost:3000)
+npm run dev -w @learning-app/admin
+
+# Run type checking across all workspaces
+npm run type-check
+
+# Deploy Edge Functions locally (requires Supabase CLI)
+supabase functions deploy redeem-link-code --no-verify-jwt
+```
+
+**Environment setup:**
+```bash
+# Copy template and fill in your Supabase credentials
+cp apps/admin/.env.example apps/admin/.env.local
+# Edit: NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY
+```
+
+### AI Content Generation Testing
+
+Test the lesson generation harness (Phase 0 validation):
 
 ```bash
 cd experiments/generation-test
 npm install
 export ANTHROPIC_API_KEY=sk-ant-...   # never commit this
-npm run generate                       # generates the default 10-case batch on claude-opus-5
-node generate.mjs --model claude-sonnet-5   # A/B against a different model
-node generate.mjs --only 3             # regenerate a single test case by number
+npm run generate                       # generates 10-case batch (claude-opus-5)
+node generate.mjs --model claude-sonnet-5   # A/B against different model
+node generate.mjs --only 3             # regenerate single case
 ```
 
-Output goes to `experiments/generation-test/output/` (git-ignored): one JSON
-file per lesson plus a human-readable `review.<model>.md` for grading.
+Output: `experiments/generation-test/output/` (git-ignored)
 
-Dependency notes (verified against the published registry, not assumed):
-`@anthropic-ai/sdk` is still on the `0.x` line — do not pin `^1`, it does not
-exist yet. Its `helpers/zod` module requires **zod v4** (it imports
-`zod/v4` internally), not v3.
+**Dependency notes:**
+- `@anthropic-ai/sdk` is still on `0.x` line (do not pin `^1`)
+- Its `helpers/zod` module requires **zod v4** (imports `zod/v4` internally)
 
 ## Conventions
 
