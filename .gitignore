@@ -1,3 +1,5 @@
 node_modules/
 experiments/generation-test/output/
 .env
+supabase/.temp/
+supabase/.env.local
