@@ -110,14 +110,24 @@ Read in this order for full context:
   - `submit-answer/` — Answer validation wrapper (planned)
   - `upload-image/` — Image upload & signed URLs (planned)
   - `generate-lesson/` — AI lesson generation (planned, see `AI_CONTENT_GENERATION.md`)
-  - **Known gap:** there is no `supabase/migrations/` here — the schema on
-    `dyjntcuovsoyhbkxnmih` (§ above) was applied directly rather than via
-    saved migration files, so the repo has no record of the exact DDL that
-    produced it beyond `SUPABASE_SETUP.md`'s summary. Any *new* schema
-    change should start the convention properly: add a numbered
-    `supabase/migrations/*.sql` file in the same change as the
-    `DATABASE_SCHEMA.md` update, applied in filename order, never edited in
-    place once applied.
+  - `supabase/migrations/` — as of 2026-09-10, backfilled from the 4
+    migrations actually applied to `dyjntcuovsoyhbkxnmih` on 2026-09-06
+    (pulled verbatim from `supabase_migrations.schema_migrations`, not
+    reconstructed from docs), closing the gap noted below. Any *new* schema
+    change adds a numbered `supabase/migrations/*.sql` file in the same
+    change as the `DATABASE_SCHEMA.md` update, applied in filename order,
+    never edited in place once applied.
+  - **Known bug (found 2026-09-10, not yet fixed):** the deployed
+    `submit_answer()` function (migration `02_create_helper_functions_and_rls`)
+    selects a column `explanation` from `question_options` for
+    multiple_choice/image_identification answers — but `question_options`
+    has no `explanation` column (only `questions` does; see
+    `DATABASE_SCHEMA.md` §3.8–3.9). This is plpgsql, so it wasn't caught at
+    function-creation time; it will raise `column "explanation" does not
+    exist` the first time a student answers a non-fill-in-blank question.
+    Needs a follow-up migration once decided whether to add
+    `question_options.explanation` or have the function fall back to
+    `questions.explanation` for all types.
 
 ## Standards referenced
 
