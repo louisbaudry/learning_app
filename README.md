@@ -7,15 +7,32 @@ for their children, assign it as homework, and track progress remotely.
 keep teaching him between limited visits. Designed from the start to scale
 to other families — including, eventually, families in Ukraine and beyond.
 
-## Status: Phase 0 — Specifications & Design
+## Status: Phase 1 — Foundation & Infrastructure
 
-No application code exists yet. This repository currently holds the
-complete, decided design: architecture, database schema, AI content
-generation design, UI wireframes, and a working prompt-validation harness.
-Development begins once the AI-generated content quality is validated (see
-below) and the specs are reviewed.
+✅ **Phase 0 Complete:** Full specifications, database design, UI wireframes  
+✅ **Phase 1 In Progress:**
+  - Supabase PostgreSQL database with Row Level Security ✅
+  - Monorepo structure with npm workspaces ✅
+  - Next.js admin panel with Supabase Auth ✅
+  - Shared TypeScript types package ✅
+  - Edge Functions for device linking (🚧 in development)
+
+**What's implemented:**
+- Complete Supabase schema with 13 tables, RLS policies, triggers, indexes
+- Admin panel: login, signup, family dashboard
+- Mobile app placeholder (Expo scaffolded)
+- Shared types for cross-app type safety
+
+**Next up:**
+- Device linking Edge Function (redeem one-time codes)
+- Image upload & signed URL handling
+- Admin panel features (create students, content editor, assign lessons)
+- Mobile app full implementation
+- Claude API integration for lesson generation
 
 ## Documentation
+
+### Specifications & Design (Phase 0)
 
 | Document | What it covers |
 |---|---|
@@ -26,6 +43,16 @@ below) and the specs are reviewed.
 | [`TESTING.md`](TESTING.md) | Testing strategy for when application code exists: risk-ordered priority tiers (RLS/Edge Functions first), tools per platform, CI plan |
 | [`prompts/lesson-generation/v1.md`](prompts/lesson-generation/v1.md) | The versioned pedagogical system prompt used to generate lessons |
 | [`design/`](design/) | UI wireframes — 5 mobile screens (student) + 4 admin-panel screens (parent), as Claude Design artboards |
+
+### Infrastructure & Development (Phase 1)
+
+| Document | What it covers |
+|---|---|
+| [`SUPABASE_SETUP.md`](SUPABASE_SETUP.md) | Database deployment: schema, RLS policies, helper functions, indexes, extensions |
+| [`MONOREPO_SETUP.md`](MONOREPO_SETUP.md) | Project structure: npm workspaces, admin panel, mobile app, shared types |
+| [`EDGE_FUNCTIONS.md`](EDGE_FUNCTIONS.md) | Server-side functions: device linking, image uploads, AI generation, deployment & testing |
+| [`apps/admin/`](apps/admin/) | Next.js admin panel with Supabase Auth, login/signup, family dashboard |
+| [`packages/shared-types/`](packages/shared-types/) | TypeScript interfaces for database models, enums, API types |
 
 ## Standards this project follows
 
