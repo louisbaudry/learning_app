@@ -9,7 +9,10 @@ done. Application code now exists:
 - ✅ Supabase PostgreSQL database with RLS, triggers, indexes (deployed)
 - ✅ Monorepo with npm workspaces (admin panel, mobile app, shared types)
 - ✅ Next.js admin panel with Supabase Auth (scaffold complete)
-- 🚧 Edge Functions for device linking, image uploads, AI generation
+- ✅ Edge Functions: device linking (`redeem-link-code`), AI lesson
+  generation (`generate-lesson`)
+- 🚧 Edge Functions: image uploads (`upload-image`); admin panel UI to
+  actually call `generate-lesson`
 
 **The canonical Supabase project is `dyjntcuovsoyhbkxnmih`**
 (`https://dyjntcuovsoyhbkxnmih.supabase.co`, see `SUPABASE_SETUP.md`). A
@@ -107,16 +110,22 @@ Read in this order for full context:
 - `packages/supabase-client/` — Shared Supabase utilities (future).
 - `supabase/functions/` — Edge Functions (TypeScript).
   - `redeem-link-code/` — Device linking (validate code, create auth user)
-  - `submit-answer/` — Answer validation wrapper (planned)
+  - `submit-answer/` — Answer validation wrapper (planned; `submit_answer()`
+    DB function it would wrap already works)
   - `upload-image/` — Image upload & signed URLs (planned)
-  - `generate-lesson/` — AI lesson generation (planned, see `AI_CONTENT_GENERATION.md`)
+  - `generate-lesson/` — ✅ AI lesson generation, see `EDGE_FUNCTIONS.md` §4
+    and `AI_CONTENT_GENERATION.md`. Calls Claude with the versioned v1
+    prompt, inserts the draft via the `insert_ai_lesson()` DB function
+    (one transaction), logs every attempt to `ai_generations`.
   - `supabase/migrations/` — as of 2026-09-10, backfilled from the 4
     migrations actually applied to `dyjntcuovsoyhbkxnmih` on 2026-09-06
     (pulled verbatim from `supabase_migrations.schema_migrations`, not
-    reconstructed from docs), closing the gap noted below. Any *new* schema
-    change adds a numbered `supabase/migrations/*.sql` file in the same
-    change as the `DATABASE_SCHEMA.md` update, applied in filename order,
-    never edited in place once applied.
+    reconstructed from docs), closing the gap noted below. Migration 05
+    (2026-09-10) fixed the `submit_answer()` bug below; migration 06
+    (2026-09-11) added `insert_ai_lesson()` for `generate-lesson`. Any
+    *new* schema change adds a numbered `supabase/migrations/*.sql` file
+    in the same change as the `DATABASE_SCHEMA.md` update, applied in
+    filename order, never edited in place once applied.
   - **Bug fixed (found and fixed 2026-09-10):** the deployed
     `submit_answer()` function (migration `02_create_helper_functions_and_rls`)
     selected a column `explanation` from `question_options` for
