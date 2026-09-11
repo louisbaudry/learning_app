@@ -116,27 +116,29 @@ Read in this order for full context:
   - `generate-lesson/` — ✅ AI lesson generation, see `EDGE_FUNCTIONS.md` §4
     and `AI_CONTENT_GENERATION.md`. Calls Claude with the versioned v1
     prompt, inserts the draft via the `insert_ai_lesson()` DB function
-    (one transaction), logs every attempt to `ai_generations`.
-  - `supabase/migrations/` — as of 2026-09-10, backfilled from the 4
-    migrations actually applied to `dyjntcuovsoyhbkxnmih` on 2026-09-06
-    (pulled verbatim from `supabase_migrations.schema_migrations`, not
-    reconstructed from docs), closing the gap noted below. Migration 05
-    (2026-09-10) fixed the `submit_answer()` bug below; migration 06
-    (2026-09-11) added `insert_ai_lesson()` for `generate-lesson`. Any
-    *new* schema change adds a numbered `supabase/migrations/*.sql` file
-    in the same change as the `DATABASE_SCHEMA.md` update, applied in
-    filename order, never edited in place once applied.
-  - **Bug fixed (found and fixed 2026-09-10):** the deployed
-    `submit_answer()` function (migration `02_create_helper_functions_and_rls`)
-    selected a column `explanation` from `question_options` for
-    multiple_choice/image_identification answers — but `question_options`
-    has no `explanation` column (only `questions` does; see
-    `DATABASE_SCHEMA.md` §3.8–3.9). This is plpgsql, so it wasn't caught at
-    function-creation time; it would have raised `column "explanation" does
-    not exist` the first time a student answered a non-fill-in-blank
-    question. Fixed in migration `05_fix_submit_answer_explanation_column`
-    (applied to `dyjntcuovsoyhbkxnmih` and committed) — `explanation` is now
-    always read from `questions`, for all question types.
+    (one transaction), logs every attempt to `ai_generations`. Not yet
+    deployed to production or wired to any admin panel UI.
+- `supabase/migrations/` — as of 2026-09-10, backfilled from the 4
+  migrations actually applied to `dyjntcuovsoyhbkxnmih` on 2026-09-06
+  (pulled verbatim from `supabase_migrations.schema_migrations`, not
+  reconstructed from docs), closing the gap this section used to flag.
+  6 migrations total as of 2026-09-11: 01–04 are the original schema, 05
+  fixed the `submit_answer()` bug below, 06 added `insert_ai_lesson()` for
+  `generate-lesson`. Any *new* schema change adds a numbered
+  `supabase/migrations/*.sql` file in the same change as the
+  `DATABASE_SCHEMA.md` update, applied in filename order, never edited in
+  place once applied.
+- **Bug fixed (found and fixed 2026-09-10):** the deployed
+  `submit_answer()` function (migration `02_create_helper_functions_and_rls`)
+  selected a column `explanation` from `question_options` for
+  multiple_choice/image_identification answers — but `question_options`
+  has no `explanation` column (only `questions` does; see
+  `DATABASE_SCHEMA.md` §3.8–3.9). This is plpgsql, so it wasn't caught at
+  function-creation time; it would have raised `column "explanation" does
+  not exist` the first time a student answered a non-fill-in-blank
+  question. Fixed in migration `05_fix_submit_answer_explanation_column`
+  (applied to `dyjntcuovsoyhbkxnmih` and committed) — `explanation` is now
+  always read from `questions`, for all question types.
 
 ## Standards referenced
 
@@ -173,6 +175,11 @@ npm run type-check
 
 # Deploy Edge Functions locally (requires Supabase CLI)
 supabase functions deploy redeem-link-code --no-verify-jwt
+
+# generate-lesson needs the caller's JWT verified (omit --no-verify-jwt)
+# and ANTHROPIC_API_KEY set as a Supabase secret first:
+supabase secrets set ANTHROPIC_API_KEY=sk-ant-...
+supabase functions deploy generate-lesson
 ```
 
 **Environment setup:**
