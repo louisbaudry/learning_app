@@ -25,7 +25,7 @@ Per `SPECIFICATIONS.md` §11 Decision 2:
 |---|---|---|---|
 | **Answer validation** | No (use DB function) | ✅ `submit_answer()` | ✅ RLS on responses |
 | **Device linking** | ✅ Redeem code, create auth user | Supporting role | ✅ RLS on student_devices |
-| **Claude API calls** | ✅ Holds API key | — | — |
+| **Claude API calls** | ✅ `generate-lesson`, holds API key | — | — |
 | **Image uploads** | ✅ Generate signed URLs | — | ✅ RLS on storage |
 | **Data reads/writes** | No | — | ✅ RLS policies |
 
@@ -109,18 +109,95 @@ Currently implemented as a PostgreSQL `security_definer` function (`submit_answe
 4. Parent uploads directly to Supabase Storage
 5. Function returns download URL (presigned GET, time-limited)
 
-### 4. `generate-lesson` (AI Content Generation)
+### 4. `generate-lesson` ✅ (AI Content Generation)
 
-**Status:** 🚧 Design phase — see `AI_CONTENT_GENERATION.md` for the full
-design (request parameters, system prompt, structured-output contract,
-model/A-B strategy, review workflow). Holds the only copy of
-`ANTHROPIC_API_KEY`; everything else it does with the database should run
-scoped to the calling parent's own JWT so ordinary RLS decides access,
-rather than the function using the service role key for reads/writes it
-doesn't need elevated privileges for.
+**Purpose:** Call the Claude API with the versioned pedagogical prompt
+(`prompts/lesson-generation/v1.md`) and insert the result as a draft
+lesson (`contents` + `questions` + `question_options`), logging the
+attempt in `ai_generations`.
+
+**Request:**
+```typescript
+POST /functions/v1/generate-lesson
+Authorization: Bearer <parent's JWT>
+
+{
+  "topic": "Reconnaître les pièces en euros",  // required
+  "student_id": "uuid...",       // optional — defaults learner_context/language from the student
+  "subject": "math",             // optional, default 'general'
+  "language": "fr",              // optional, default 'fr' (or the student's language)
+  "difficulty": 2,               // optional 1-3, default 2
+  "curriculum_cycle": "cycle_2", // optional
+  "curriculum_domain": "Nombres et calculs", // optional
+  "question_count": 5,           // optional 3-10, default 5
+  "question_types": ["multiple_choice", "fill_in_blank"], // optional, default both
+  "learner_context": "...",      // optional override of the student's learner_notes
+  "extra_instructions": "...",   // optional
+  "model": "claude-opus-5"       // optional, default 'claude-opus-5'
+}
+```
+
+**Response (success):**
+```typescript
+{
+  "success": true,
+  "content_id": "uuid...",       // the new draft contents row
+  "ai_generation_id": "uuid...",
+  "title": "...",
+  "question_count": 5
+}
+```
+
+**Response (failure — after one automatic retry, per AI_CONTENT_GENERATION.md §8):**
+```typescript
+{
+  "success": false,
+  "error": "...",
+  "ai_generation_id": "uuid...",
+  "lesson": { /* raw draft, for manual salvage — only when we got a flawed
+                 lesson (semantic validation failed), never persisted */ }
+}
+```
+
+**Security:**
+- Holds the only copy of `ANTHROPIC_API_KEY`.
+- Runs scoped to the calling parent's own JWT (anon key + forwarded
+  `Authorization` header) — RLS decides access, not the service role key.
+- The one exception: the multi-table `contents`/`questions`/`question_options`
+  write must be one transaction (AI_CONTENT_GENERATION.md §5), which a
+  sequence of RLS-scoped REST calls can't guarantee — a failure partway
+  through would otherwise leave an orphaned draft with missing questions.
+  That write goes through a new DB function, `insert_ai_lesson()`
+  (migration `06_create_insert_ai_lesson_function`): `security definer`
+  like `submit_answer()`/`my_family_ids()`, but `auth.uid()` still resolves
+  to the calling parent (their JWT is forwarded, never the service role
+  key), so it checks family membership itself rather than trusting RLS.
+- AI-generated content always lands as `contents.status = 'draft'`
+  (SPECIFICATIONS.md §11 Decision 4) — enforced inside `insert_ai_lesson()`,
+  not just this function's behavior.
+
+**Known simplification (2026-09-11):** `AI_CONTENT_GENERATION.md` §6
+describes opting into the Claude API's server-side `fallbacks` parameter
+for refusals. This function does not wire that up yet (it would need the
+beta namespace/headers, untested against the Deno `esm.sh` SDK import used
+here) — refusals are instead covered by the same one-retry loop that
+handles parse/validation failures. Revisit once the beta path is verified.
+
+**Known doc drift (2026-09-11, not yet resolved):** `AI_CONTENT_GENERATION.md`
+§4's example user message includes a "Curriculum: {curriculum_cycle} /
+{curriculum_domain}" line and a CURRICULUM REFERENCE system-prompt
+section; `prompts/lesson-generation/v1.md` (the declared canonical,
+validated prompt — matching `experiments/generation-test/generate.mjs`)
+has neither. This function follows `v1.md` exactly, since that's the
+prompt actually validated against real generations — `curriculum_cycle`/
+`curriculum_domain` are stored on the resulting `contents` row as
+metadata, but not yet injected into the prompt text. Adding that needs a
+new `prompts/lesson-generation/v2.md` (version files are never edited in
+place) plus a matching update here.
 
 **Reference:** `AI_CONTENT_GENERATION.md` §2–§8, `DATABASE_SCHEMA.md`
-(`contents`/`questions`/`question_options`/`ai_generations`)
+(`contents`/`questions`/`question_options`/`ai_generations`),
+`prompts/lesson-generation/v1.md`
 
 ---
 
@@ -236,12 +313,10 @@ supabase functions logs redeem-link-code --since 2024-09-10
    - Generate signed URLs
    - Validate parent/family access via RLS
 
-3. **Implement `generate-lesson` function** (name matches the architecture
-   diagram in `AI_CONTENT_GENERATION.md` §2 — keep the two in sync)
-   - Call Claude API with lesson generation prompt
-   - Validate response structure
-   - Store in `ai_generations` audit table
-   - Create draft `contents` record
+3. ~~Implement `generate-lesson` function~~ ✅ Done 2026-09-11 — see above.
+   Still open: deploy to production, wire up the admin panel's generation
+   form, and the two "Known" items noted in its section above (fallbacks,
+   curriculum-in-prompt doc drift).
 
 4. **Add comprehensive error handling & monitoring**
    - Structured logging (JSON format)

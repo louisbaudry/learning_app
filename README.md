@@ -23,20 +23,28 @@ deployed to it.
   - Monorepo structure with npm workspaces ✅
   - Next.js admin panel with Supabase Auth ✅
   - Shared TypeScript types package ✅
-  - Edge Functions for device linking (🚧 in development)
+  - Edge Functions: device linking (`redeem-link-code`) ✅, AI lesson
+    generation (`generate-lesson`) ✅, image uploads (🚧 not started)
 
 **What's implemented:**
-- Complete Supabase schema with 13 tables, RLS policies, triggers, indexes
-- Admin panel: login, signup, family dashboard
-- Mobile app placeholder (Expo scaffolded)
+- Complete Supabase schema with 13 tables + 1 view, RLS policies, triggers,
+  indexes — and, as of 2026-09-10, tracked in `supabase/migrations/`
+  (6 migrations, matching what's actually deployed on the canonical project)
+- Admin panel: login, signup, family dashboard (no content/assignment UI yet)
+- `redeem-link-code` Edge Function: device linking (validate one-time code,
+  create anonymous auth user)
+- `generate-lesson` Edge Function: calls the Claude API with the versioned
+  v1 pedagogical prompt, validates and inserts a draft lesson — see
+  `EDGE_FUNCTIONS.md` §4. Not yet deployed to production or wired to any
+  admin panel UI.
 - Shared types for cross-app type safety
+- Mobile app: only a `package.json` placeholder — not actually scaffolded yet
 
 **Next up:**
-- Device linking Edge Function (redeem one-time codes)
-- Image upload & signed URL handling
-- Admin panel features (create students, content editor, assign lessons)
-- Mobile app full implementation
-- Claude API integration for lesson generation
+- Deploy `generate-lesson` to production; build the admin panel form that calls it
+- `upload-image` Edge Function (signed URLs)
+- Admin panel features (create students, content editor/review, assign lessons)
+- Scaffold and build the mobile app (React Native + Expo)
 
 ## Documentation
 
@@ -61,6 +69,8 @@ deployed to it.
 | [`EDGE_FUNCTIONS.md`](EDGE_FUNCTIONS.md) | Server-side functions: device linking, image uploads, AI generation, deployment & testing |
 | [`apps/admin/`](apps/admin/) | Next.js admin panel with Supabase Auth, login/signup, family dashboard |
 | [`packages/shared-types/`](packages/shared-types/) | TypeScript interfaces for database models, enums, API types |
+| [`supabase/migrations/`](supabase/migrations/) | The actual applied SQL for the canonical project, in order — the source of truth for what's deployed, alongside `SUPABASE_SETUP.md`'s summary |
+| [`supabase/functions/`](supabase/functions/) | Edge Function source (`redeem-link-code`, `generate-lesson`) |
 
 ## Standards this project follows
 
