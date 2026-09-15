@@ -122,12 +122,12 @@ Read in this order for full context:
   migrations actually applied to `dyjntcuovsoyhbkxnmih` on 2026-09-06
   (pulled verbatim from `supabase_migrations.schema_migrations`, not
   reconstructed from docs), closing the gap this section used to flag.
-  6 migrations total as of 2026-09-11: 01–04 are the original schema, 05
+  7 migrations total as of 2026-09-15: 01–04 are the original schema, 05
   fixed the `submit_answer()` bug below, 06 added `insert_ai_lesson()` for
-  `generate-lesson`. Any *new* schema change adds a numbered
-  `supabase/migrations/*.sql` file in the same change as the
-  `DATABASE_SCHEMA.md` update, applied in filename order, never edited in
-  place once applied.
+  `generate-lesson`, 07 fixed the `handle_new_user()` bug below. Any *new*
+  schema change adds a numbered `supabase/migrations/*.sql` file in the
+  same change as the `DATABASE_SCHEMA.md` update, applied in filename
+  order, never edited in place once applied.
 - **Bug fixed (found and fixed 2026-09-10):** the deployed
   `submit_answer()` function (migration `02_create_helper_functions_and_rls`)
   selected a column `explanation` from `question_options` for
@@ -139,6 +139,22 @@ Read in this order for full context:
   question. Fixed in migration `05_fix_submit_answer_explanation_column`
   (applied to `dyjntcuovsoyhbkxnmih` and committed) — `explanation` is now
   always read from `questions`, for all question types.
+- **Bug fixed (found and fixed 2026-09-15, higher severity — blocked every
+  signup):** none of the 7 `public` functions had an explicit
+  `search_path`. In most call contexts Postgres/PostgREST supplies one
+  that includes `public`, so this went unnoticed — but the `auth.users`
+  insert trigger that fires `handle_new_user()` on every parent signup
+  does not, so its unqualified `insert into profiles (...)` failed with
+  `relation "profiles" does not exist`, aborting the signup transaction.
+  Caught 2026-09-15 on the first real signup attempt (also flagged by
+  Supabase's own security advisor as "Function Search Path Mutable" for
+  all 7). Fixed in migration `07_fix_function_search_path` (applied to
+  `dyjntcuovsoyhbkxnmih`): explicit `search_path = public, pg_temp` on
+  `my_family_ids`, `my_student_id`, `normalize_answer`, `touch_updated_at`,
+  `handle_new_user`, `submit_answer`, `insert_ai_lesson`. Also revoked
+  `handle_new_user()`'s (unintended, advisor-flagged) direct callability by
+  `anon`/`authenticated` via `/rest/v1/rpc/handle_new_user` — it should
+  only ever run as the trigger.
 
 ## Standards referenced
 
