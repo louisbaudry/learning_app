@@ -54,10 +54,37 @@ interface RedeemCodeResponse {
  *   non-revoked device, re-calling this function (e.g. a page reload right
  *   after linking) returns the existing link instead of erroring
  *
+ * Deployed with verify_jwt = true (the platform-level check, reverted
+ * 2026-09-15 after briefly being disabled): an earlier debugging session
+ * misdiagnosed a hang against this function as a gateway/CORS bug and
+ * disabled verify_jwt as a workaround. The actual cause was unrelated —
+ * the dev sandbox's outbound proxy cannot reach Supabase Edge Functions at
+ * all (they run on an HTTP/2-only backend the proxy doesn't support; see
+ * /root/.ccr/README.md's "Not supported through the proxy" section) — so
+ * every request to any Edge Function hung there regardless of this
+ * setting. No real evidence ever showed verify_jwt:true breaking OPTIONS
+ * preflights. Kept the explicit in-function OPTIONS handler below anyway
+ * (harmless, standard practice for browser-called functions), but restored
+ * the platform-level JWT check as defense-in-depth alongside this
+ * function's own `callerClient.auth.getUser()` verification.
+ *
  * Reference: DATABASE_SCHEMA.md §3.5 (device_link_codes), §3.6 (student_devices)
  */
 
+// CORS: this function is called directly from the browser (supabase-js
+// `functions.invoke`), which sends an OPTIONS preflight first because the
+// request carries an Authorization header.
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+}
+
 export default async (req: Request): Promise<Response> => {
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders })
+  }
+
   try {
     if (req.method !== 'POST') {
       return jsonResponse({ success: false, error: 'Method not allowed' }, 405)
@@ -171,5 +198,8 @@ export default async (req: Request): Promise<Response> => {
 }
 
 function jsonResponse(body: RedeemCodeResponse, status: number): Response {
-  return new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } })
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { 'Content-Type': 'application/json', ...corsHeaders },
+  })
 }

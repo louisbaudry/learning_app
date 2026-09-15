@@ -145,6 +145,20 @@ Read in this order for full context:
   top-level INSERT/UPDATE/DELETE fails with "read-only transaction") —
   use `apply_migration` for writes, even one-off data seeding that isn't
   really a schema migration (there's no separate seed-data tool).
+  **Note (found 2026-09-15, cost ~an hour of misdiagnosis — read this
+  before debugging an Edge Function "hang" from a cloud/sandboxed Claude
+  Code session):** this kind of session's outbound proxy cannot reach
+  Supabase Edge Functions (`/functions/v1/*`) at all — confirmed via
+  `curl -v`: TLS handshake and request send succeed, then zero response
+  bytes ever arrive, while `/rest/v1/*` and `/auth/v1/*` on the same
+  project respond instantly. `/root/.ccr/README.md`'s own troubleshooting
+  guide names the cause: Edge Functions run on an HTTP/2-only backend,
+  which that section lists as explicitly unsupported through the proxy
+  (alongside gRPC and WebSocket upgrades) — "report, do not work around."
+  A hang here is **not** evidence of a bug in the function (`verify_jwt`,
+  CORS/OPTIONS handling, etc.) — don't spend time changing function
+  config/code to chase it. Ask the user to test from their own machine
+  instead (their browser/curl won't go through this proxy).
 - **Bug fixed (found and fixed 2026-09-10):** the deployed
   `submit_answer()` function (migration `02_create_helper_functions_and_rls`)
   selected a column `explanation` from `question_options` for

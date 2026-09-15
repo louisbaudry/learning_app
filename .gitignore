@@ -6,3 +6,4 @@ supabase/.env.local
 .env.local
 .next/
 next-env.d.ts
+*.tsbuildinfo
