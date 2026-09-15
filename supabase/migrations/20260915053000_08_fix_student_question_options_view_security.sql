@@ -1,0 +1,20 @@
+-- Fixes a real data-leakage bug found by Supabase's security advisor
+-- ("Security Definer View", ERROR level) while building the first
+-- student-facing read path. student_question_options (migration
+-- 02_create_helper_functions_and_rls) has no WHERE clause of its own --
+-- it relies entirely on the querying role's RLS on question_options to
+-- restrict rows. But a plain `create view` defaults to security_invoker =
+-- false in Postgres, which runs the view with the *view owner's*
+-- privileges -- bypassing RLS on question_options for every caller. In
+-- practice: any authenticated user querying this view got every family's
+-- question option labels back (is_correct is excluded, but the labels
+-- themselves -- i.e. every answer choice for every family's content --
+-- were not).
+--
+-- Fix: security_invoker = true (Postgres 15+, available here) makes the
+-- view run with the querying role's own permissions, so the existing
+-- (correct) RLS policies on question_options --
+-- question_options_student_read (own assigned content only) and
+-- question_options_parent_read (own family only) -- apply as originally
+-- intended.
+alter view student_question_options set (security_invoker = true);

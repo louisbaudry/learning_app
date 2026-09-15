@@ -102,6 +102,14 @@ Read in this order for full context:
 - `EDGE_FUNCTIONS.md` — server-side functions (device linking, uploads, AI).
 - `apps/admin/` — Next.js admin panel (TypeScript, Supabase Auth).
   - `src/pages/` — Next.js pages (login, dashboard, ...)
+  - `src/pages/play/[code].tsx` — ⚠️ **temporary test harness** (added
+    2026-09-15), not the decided mobile architecture. A no-login,
+    student-facing web page that reuses the exact same backend (schema,
+    RLS, `redeem-link-code`, `submit_answer()`) the real mobile app will
+    use, built only to validate the core loop (assign → answer → see
+    results) end-to-end before investing in the React Native/Expo app —
+    see the full flow in the file's own header comment. Delete or replace
+    once the real mobile app exists; don't build on top of it.
   - `src/lib/supabase.ts` — Supabase client initialization
   - `tsconfig.json`, `next.config.js`, `.env.example`
 - `apps/mobile/` — React Native + Expo placeholder (to be scaffolded).
@@ -109,7 +117,11 @@ Read in this order for full context:
   API types. Imported by both admin panel and mobile app.
 - `packages/supabase-client/` — Shared Supabase utilities (future).
 - `supabase/functions/` — Edge Functions (TypeScript).
-  - `redeem-link-code/` — Device linking (validate code, create auth user)
+  - `redeem-link-code/` — ✅ Device linking. **Rewritten 2026-09-15** (see
+    `EDGE_FUNCTIONS.md` §1) — the original version was a dead end that
+    never returned usable session credentials, blocking every device link
+    attempt; now uses standard client-side `signInAnonymously()` +
+    this function only *links* that session to a student.
   - `submit-answer/` — Answer validation wrapper (planned; `submit_answer()`
     DB function it would wrap already works)
   - `upload-image/` — Image upload & signed URLs (planned)
@@ -122,12 +134,17 @@ Read in this order for full context:
   migrations actually applied to `dyjntcuovsoyhbkxnmih` on 2026-09-06
   (pulled verbatim from `supabase_migrations.schema_migrations`, not
   reconstructed from docs), closing the gap this section used to flag.
-  7 migrations total as of 2026-09-15: 01–04 are the original schema, 05
+  8 migrations total as of 2026-09-15: 01–04 are the original schema, 05
   fixed the `submit_answer()` bug below, 06 added `insert_ai_lesson()` for
-  `generate-lesson`, 07 fixed the `handle_new_user()` bug below. Any *new*
-  schema change adds a numbered `supabase/migrations/*.sql` file in the
-  same change as the `DATABASE_SCHEMA.md` update, applied in filename
-  order, never edited in place once applied.
+  `generate-lesson`, 07 fixed the `handle_new_user()` bug below, 08 fixed
+  the `student_question_options` view bug below. Any *new* schema change
+  adds a numbered `supabase/migrations/*.sql` file in the same change as
+  the `DATABASE_SCHEMA.md` update, applied in filename order, never
+  edited in place once applied.
+  Note: `mcp__Supabase__execute_sql` runs read-only on this project (any
+  top-level INSERT/UPDATE/DELETE fails with "read-only transaction") —
+  use `apply_migration` for writes, even one-off data seeding that isn't
+  really a schema migration (there's no separate seed-data tool).
 - **Bug fixed (found and fixed 2026-09-10):** the deployed
   `submit_answer()` function (migration `02_create_helper_functions_and_rls`)
   selected a column `explanation` from `question_options` for
@@ -155,6 +172,21 @@ Read in this order for full context:
   `handle_new_user()`'s (unintended, advisor-flagged) direct callability by
   `anon`/`authenticated` via `/rest/v1/rpc/handle_new_user` — it should
   only ever run as the trigger.
+- **Bug fixed (found and fixed 2026-09-15, real data leak):** the
+  `student_question_options` view (migration
+  `02_create_helper_functions_and_rls` — hides `is_correct` from students)
+  was created `SECURITY DEFINER` by default (Postgres's default for a
+  plain `create view` before explicit `security_invoker`), and has no
+  `WHERE` clause of its own — it relies entirely on the querying role's
+  RLS on `question_options` to restrict rows. Being security-definer meant
+  it ran with the *view owner's* privileges instead, bypassing that RLS
+  for every caller: any authenticated user querying it got every family's
+  question option labels back, not just their own assigned ones (flagged
+  by Supabase's security advisor as "Security Definer View", ERROR level).
+  Fixed in migration `08_fix_student_question_options_view_security`
+  (applied to `dyjntcuovsoyhbkxnmih`): `security_invoker = true` on the
+  view, so the existing (correct) `question_options_student_read` /
+  `question_options_parent_read` RLS policies apply as originally intended.
 
 ## Standards referenced
 
