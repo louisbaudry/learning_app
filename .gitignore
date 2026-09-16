@@ -5,3 +5,5 @@ supabase/.temp/
 supabase/.env.local
 .env.local
 *.json
+apps/admin/package.json
+apps/mobile/package.json
