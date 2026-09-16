@@ -4,3 +4,4 @@ experiments/generation-test/output/
 supabase/.temp/
 supabase/.env.local
 .env.local
+*.json
