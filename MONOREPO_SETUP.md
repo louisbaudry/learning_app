@@ -124,19 +124,37 @@ Then open: http://localhost:3000
 - [ ] Progress analytics
 
 **Tech Stack:**
-- Next.js 14 (React 18)
+- Next.js 16 (React 18) — bumped from 14 on 2026-09-20; see `next.config.js`'s
+  `agentRules: false` (disables Next 16's auto-generated
+  `AGENTS.md`/`CLAUDE.md`, which would otherwise duplicate this repo's own
+  root `CLAUDE.md` on every `next dev`/`build`)
 - TypeScript
 - Supabase JS SDK
 - Vanilla CSS (future: Tailwind/Styled Components)
 
+Also contains `src/pages/play/[code].tsx` — a temporary, no-login,
+student-facing test harness (added 2026-09-15) for validating the core
+assign → answer → results loop before the real mobile app exists. See its
+own header comment and `CLAUDE.md`'s repository-layout entry for it; delete
+or replace once `apps/mobile` is real.
+
 ### Mobile App (`apps/mobile`)
 
-**Status:** 🚧 Placeholder only
+**Status:** 🚧 Placeholder only — dependencies were bumped (Expo 49→57,
+React Native 0.72→0.87, React Navigation 6→7) on 2026-09-20, but no app
+code exists yet to actually build against these versions. The bump left
+`react` pinned to a version incompatible with the new `react-native`, plus
+a stray `next` dependency that doesn't belong in an Expo app — both fixed
+in the same change that discovered them, but the rest of the
+React Native ecosystem packages (`react-native-gesture-handler`,
+`react-native-reanimated`, `react-native-safe-area-context`) are still
+pinned to their original Expo-49-era versions and may need realigning
+(e.g. `npx expo install --fix`) once real app development starts here.
 
 **Tech Stack:**
-- React Native 0.72
-- Expo 49
-- React Navigation (stack)
+- React Native ^0.87
+- Expo ^57
+- React Navigation ^7 (stack)
 - TypeScript
 - Supabase JS SDK
 

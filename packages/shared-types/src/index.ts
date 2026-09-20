@@ -229,7 +229,13 @@ export interface RedeemLinkCodeRequest {
   device_name: string
 }
 
+// Matches the fixed redeem-link-code contract (2026-09-15): the caller
+// already holds its own anonymous session (`supabase.auth.signInAnonymously()`)
+// before calling this function, so no token is handed back — see
+// supabase/functions/redeem-link-code/index.ts for the full flow.
 export interface RedeemLinkCodeResponse {
-  student_id: string
-  auth_token: string
+  success: boolean
+  error?: string
+  student_id?: string
+  device_id?: string
 }

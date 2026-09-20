@@ -4,6 +4,6 @@ experiments/generation-test/output/
 supabase/.temp/
 supabase/.env.local
 .env.local
-*.json
-apps/admin/package.json
-apps/mobile/package.json
+.next/
+next-env.d.ts
+*.tsbuildinfo

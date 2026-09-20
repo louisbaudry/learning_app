@@ -28,23 +28,42 @@ deployed to it.
 
 **What's implemented:**
 - Complete Supabase schema with 13 tables + 1 view, RLS policies, triggers,
-  indexes — and, as of 2026-09-10, tracked in `supabase/migrations/`
-  (6 migrations, matching what's actually deployed on the canonical project)
+  indexes — tracked in `supabase/migrations/` (8 migrations as of
+  2026-09-15, matching what's actually deployed on the canonical project;
+  see `CLAUDE.md` for the running log of what each one fixed)
 - Admin panel: login, signup, family dashboard (no content/assignment UI yet)
-- `redeem-link-code` Edge Function: device linking (validate one-time code,
-  create anonymous auth user)
+- `redeem-link-code` Edge Function: device linking. **Rewritten 2026-09-15**
+  — the original version never actually returned usable session
+  credentials, a dead end that blocked every device link attempt. Now uses
+  standard client-side anonymous auth (`signInAnonymously()`) plus this
+  function only links that session to a student
 - `generate-lesson` Edge Function: calls the Claude API with the versioned
   v1 pedagogical prompt, validates and inserts a draft lesson — see
   `EDGE_FUNCTIONS.md` §4. Not yet deployed to production or wired to any
   admin panel UI.
+- `apps/admin/src/pages/play/[code].tsx` (added 2026-09-15) — a temporary,
+  no-login, student-facing web page for testing the full assign → answer →
+  results loop before the real mobile app exists. Reuses the exact same
+  backend the mobile app will use; **not** the decided mobile architecture,
+  see `CLAUDE.md` before building anything on top of it
+- Three more real bugs found and fixed along the way (all in `CLAUDE.md`'s
+  repository-layout notes): `submit_answer()` reading a nonexistent column,
+  a missing `search_path` on every helper function that silently broke
+  *every* parent signup, and a `SECURITY DEFINER` view that leaked every
+  family's question data to any authenticated caller
 - Shared types for cross-app type safety
-- Mobile app: only a `package.json` placeholder — not actually scaffolded yet
+- Mobile app: still just a `package.json` placeholder — dependencies were
+  bumped 2026-09-20 (Expo 49→57, React Native 0.72→0.87) but no app code
+  exists yet to build against them
 
 **Next up:**
+- Confirm the `/play` test harness end-to-end on a real device (needs a
+  local run — this can't be verified from a cloud Claude Code session, see
+  `CLAUDE.md`)
 - Deploy `generate-lesson` to production; build the admin panel form that calls it
 - `upload-image` Edge Function (signed URLs)
 - Admin panel features (create students, content editor/review, assign lessons)
-- Scaffold and build the mobile app (React Native + Expo)
+- Scaffold and build the real mobile app (React Native + Expo)
 
 ## Documentation
 
