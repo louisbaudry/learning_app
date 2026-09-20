@@ -1,8 +1,25 @@
 # Supabase Database Setup
 
 **Status:** ✅ Complete  
-**Date:** 2026-09-06  
+**Date:** 2026-09-06 (initial deployment snapshot below — see "Updates
+since initial deployment" for what's changed)  
 **Project URL:** `https://dyjntcuovsoyhbkxnmih.supabase.co`
+
+## Updates since initial deployment
+
+The schema below is exactly what was deployed 2026-09-06. Since then:
+- `supabase/migrations/` (added 2026-09-10) is now the source of truth for
+  the exact SQL, including everything past this snapshot — see its own
+  entry in `CLAUDE.md`'s repository layout for the full list.
+- Two real bugs were found and fixed in the helper functions listed below
+  (`submit_answer()`'s wrong `explanation` source; every one of these
+  functions missing an explicit `search_path`, which silently broke every
+  parent signup) — both documented in `CLAUDE.md`.
+- A real data-leak bug was found and fixed in the `student_question_options`
+  view (§1 below) — it was bypassing RLS entirely, also documented in
+  `CLAUDE.md`.
+- `insert_ai_lesson()` was added (migration 06) to support `generate-lesson`
+  (see `EDGE_FUNCTIONS.md` §4) — not in the original 2026-09-06 deployment.
 
 ## What Was Set Up
 
@@ -68,26 +85,30 @@
 ### Phase 1 (MVP) Implementation:
 
 1. **Environment Setup**
-   - [ ] Create `.env.local` with Supabase credentials
-   - [ ] Set up monorepo structure (`apps/admin`, `apps/mobile`)
+   - [x] Create `.env.local` with Supabase credentials
+   - [x] Set up monorepo structure (`apps/admin`, `apps/mobile`)
 
 2. **Admin Panel (Next.js)**
-   - [ ] Scaffold Next.js app with TypeScript
-   - [ ] Supabase client integration
-   - [ ] Auth flow (email/password signup for parents)
-   - [ ] Family dashboard (view students, create content, assign lessons)
+   - [x] Scaffold Next.js app with TypeScript
+   - [x] Supabase client integration
+   - [x] Auth flow (email/password signup for parents)
+   - [ ] Family dashboard (view students, create content, assign lessons) — dashboard shows families only, no create/manage UI yet
    - [ ] Content editor (create/edit questions)
    - [ ] Progress tracking (view student responses)
 
 3. **Mobile App (React Native + Expo)**
-   - [ ] Scaffold Expo project
-   - [ ] Device linking flow (redeem one-time code)
-   - [ ] Student dashboard (view assignments, complete lessons)
-   - [ ] Question rendering (MC, fill-in-blank, image identification)
-   - [ ] Answer submission (calls `submit_answer()` function)
+   - [ ] Scaffold Expo project — still just a placeholder `package.json`;
+     a temporary web substitute (`apps/admin/src/pages/play/[code].tsx`)
+     exists for early testing, see `CLAUDE.md`
+   - [ ] Device linking flow (redeem one-time code) — done in the web
+     substitute above via `redeem-link-code`; not yet in a real mobile app
+   - [ ] Student dashboard (view assignments, complete lessons) — same caveat
+   - [ ] Question rendering (MC, fill-in-blank, image identification) — MC/fill-in-blank done in the web substitute; image_identification not attempted anywhere yet
+   - [x] Answer submission (calls `submit_answer()` function) — via the web substitute
 
 4. **Edge Functions** (Supabase)
-   - [ ] `redeem_link_code()` — validate device link code, create anonymous auth
+   - [x] `redeem_link_code()` — validate device link code, link an already-anonymous-authenticated session (rewritten 2026-09-15, see `EDGE_FUNCTIONS.md` §1)
+   - [x] `generate-lesson()` — AI content generation (see `EDGE_FUNCTIONS.md` §4); not yet wired to any admin panel UI
    - [ ] Image upload handlers → signed URLs
 
 5. **Testing** (per `TESTING.md`)

@@ -1,7 +1,8 @@
 # Supabase Edge Functions
 
-**Status:** 🚧 In Development  
-**Date:** 2026-09-10  
+**Status:** 🚧 In Development — `redeem-link-code` and `generate-lesson`
+implemented and deployed; `submit-answer` and `upload-image` not started  
+**Date:** 2026-09-20 (last updated)
 
 Edge Functions are server-side TypeScript functions that run on Supabase infrastructure. They handle logic that:
 - Must not run on the client (holds secrets like Claude API keys)
@@ -93,6 +94,13 @@ Authorization: Bearer <anonymous session JWT>  // from supabase.auth.signInAnony
 **Prerequisite:** "Anonymous sign-ins" must be enabled for the project
 (Supabase dashboard → Authentication → Sign In / Providers) — there's no
 Management API/SQL path to toggle this, it's a one-time manual step.
+
+**CORS:** called directly from the browser via supabase-js
+`functions.invoke()` (see `src/pages/play/[code].tsx`), so it handles the
+`OPTIONS` preflight itself (`Access-Control-Allow-*` headers) before any
+other logic, and stays deployed with `verify_jwt: true` (the platform-level
+check) alongside its own in-function `callerClient.auth.getUser()`
+verification — defense-in-depth, not either/or.
 
 **Reference:** `DATABASE_SCHEMA.md` §3.5–3.6, `SPECIFICATIONS.md` §11 Decision 7
 
@@ -233,11 +241,14 @@ brew install supabase/tap/supabase
 # Start local Supabase stack (includes functions emulator)
 supabase start
 
-# Deploy a single function to local environment
-supabase functions deploy redeem-link-code --no-verify-jwt
+# Deploy a single function to local environment (matches production:
+# verify_jwt true, so a request needs a real Authorization: Bearer <JWT>)
+supabase functions deploy redeem-link-code
 
-# Test the function
+# Test the function (get a JWT via signInAnonymously() first — see §1's
+# Request example; a bare curl with no Authorization header gets a 401)
 curl -X POST http://localhost:54321/functions/v1/redeem-link-code \
+  -H "Authorization: Bearer <anonymous session JWT>" \
   -H "Content-Type: application/json" \
   -d '{"code":"TEST-1234","device_name":"Test Device"}'
 ```
@@ -283,9 +294,18 @@ Each function should have tests covering:
 Test the full flow:
 1. Parent generates code via admin panel
 2. Code saved to `device_link_codes`
-3. Child redeems code via mobile app
-4. Edge Function creates auth user + device record
+3. Child's client signs in anonymously, then redeems the code
+4. Edge Function links that session to the student via `student_devices`
 5. Child can now read assigned content (RLS allows it)
+
+**Manually verified 2026-09-15** for the `/play/[code].tsx` test harness
+(not yet the real mobile app): code correctly redeployed with the
+`signInAnonymously()`-based flow, deployed with `verify_jwt: true`. Full
+end-to-end confirmation (a real device completing a real lesson) depends
+on the user's own local run — this repo's cloud/sandboxed Claude Code
+sessions cannot reach Supabase Edge Functions at all (see the note in
+`CLAUDE.md`'s `supabase/migrations/` entry) and so cannot verify this step
+themselves.
 
 ---
 
@@ -298,7 +318,7 @@ Test the full flow:
 supabase functions logs redeem-link-code --follow
 
 # View logs for a specific date
-supabase functions logs redeem-link-code --since 2024-09-10
+supabase functions logs redeem-link-code --since 2026-09-10
 ```
 
 ### Metrics (via Supabase Dashboard)
@@ -324,10 +344,10 @@ supabase functions logs redeem-link-code --since 2024-09-10
 
 ## Next Steps
 
-1. **Deploy `redeem-link-code` to production**
-   - Set environment variables in Supabase dashboard
-   - Run `supabase functions deploy redeem-link-code`
-   - Test with a real code from admin panel
+1. ~~Deploy `redeem-link-code` to production~~ ✅ Done — deployed
+   2026-09-15 (rewritten to the `signInAnonymously()` flow; `verify_jwt: true`).
+   Still open: confirm a real device completing the full flow (blocked on
+   the user's own local run — see the Integration Tests note above).
 
 2. **Implement `upload-image` function**
    - Handle image file uploads
