@@ -222,10 +222,11 @@ card instead.
   migrations actually applied to `dyjntcuovsoyhbkxnmih` on 2026-09-06
   (pulled verbatim from `supabase_migrations.schema_migrations`, not
   reconstructed from docs), closing the gap this section used to flag.
-  8 migrations total as of 2026-09-15: 01–04 are the original schema, 05
+  9 migrations total as of 2026-09-21: 01–04 are the original schema, 05
   fixed the `submit_answer()` bug below, 06 added `insert_ai_lesson()` for
-  `generate-lesson`, 07 fixed the `handle_new_user()` bug below, 08 fixed
-  the `student_question_options` view bug below. Any *new* schema change
+  `generate-lesson`, 07 fixed the `handle_new_user()` search_path bug below,
+  08 fixed the `student_question_options` view bug below, 09 fixed a gap in
+  07's own fix (see the bug entry below). Any *new* schema change
   adds a numbered `supabase/migrations/*.sql` file in the same change as
   the `DATABASE_SCHEMA.md` update, applied in filename order, never
   edited in place once applied.
@@ -289,6 +290,38 @@ card instead.
   (applied to `dyjntcuovsoyhbkxnmih`): `security_invoker = true` on the
   view, so the existing (correct) `question_options_student_read` /
   `question_options_parent_read` RLS policies apply as originally intended.
+- **Bug fixed (found and fixed 2026-09-21 — 07's own fix was incomplete):**
+  migration 07's `revoke execute on function handle_new_user() from anon,
+  authenticated` didn't actually close the hole it claimed to. Postgres
+  grants `EXECUTE` to the `PUBLIC` pseudo-role on every function by default
+  at creation time, and every role (including `anon`/`authenticated`)
+  implicitly has whatever `PUBLIC` has — revoking from two named roles
+  without also revoking from `PUBLIC` leaves the function fully callable
+  through that untouched grant. Confirmed live: `has_function_privilege
+  ('anon', 'handle_new_user()', 'execute')` still returned `true`, and
+  `pg_proc.proacl` still showed the original `=X/postgres` (`PUBLIC`)
+  entry. In practice this specific function only errors when called
+  directly outside its trigger context (`new` isn't assigned), so
+  exploitability was low — but it directly contradicted this file's own
+  claim that it had been fixed, so treat any future `revoke ... from
+  anon, authenticated` the same way: it needs `from public` too, or it's
+  not actually a fix.
+  Same audit also found `insert_ai_lesson()` (added in 06, never revoked
+  from anything) directly callable by the `anon` role — not the intended
+  surface (its own header/`EDGE_FUNCTIONS.md` §4 say it's meant to be
+  called only by an authenticated parent, whether directly or via
+  `generate-lesson`'s forwarded JWT). It does self-scope via `p_family_id
+  not in (select * from my_family_ids())`, which resolves to empty for a
+  true `anon` caller (no `auth.uid()`) and would reject the insert — so
+  this wasn't a working exploit either — but removing the unused `anon`
+  grant matches stated intent and removes a defense-in-depth gap Supabase's
+  advisor flagged (`authenticated_security_definer_function_executable`
+  stays, expected: parents are meant to call it, scoped to their own
+  family). Fixed in migration `09_fix_function_grants_public_role` (applied
+  to `dyjntcuovsoyhbkxnmih`): `revoke ... from public` on `handle_new_user`,
+  `revoke ... from public, anon` on `insert_ai_lesson`. Verified via
+  `get_advisors` that both `anon_security_definer_function_executable`
+  findings for these two functions are gone post-fix.
 
 ## Standards referenced
 

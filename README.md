@@ -28,8 +28,8 @@ deployed to it.
 
 **What's implemented:**
 - Complete Supabase schema with 13 tables + 1 view, RLS policies, triggers,
-  indexes — tracked in `supabase/migrations/` (8 migrations as of
-  2026-09-15, matching what's actually deployed on the canonical project;
+  indexes — tracked in `supabase/migrations/` (9 migrations as of
+  2026-09-21, matching what's actually deployed on the canonical project;
   see `CLAUDE.md` for the running log of what each one fixed)
 - Admin panel: login, signup, family dashboard (no content/assignment UI yet)
 - `redeem-link-code` Edge Function: device linking. **Rewritten 2026-09-15**
@@ -46,11 +46,13 @@ deployed to it.
   results loop before the real mobile app exists. Reuses the exact same
   backend the mobile app will use; **not** the decided mobile architecture,
   see `CLAUDE.md` before building anything on top of it
-- Three more real bugs found and fixed along the way (all in `CLAUDE.md`'s
+- Four more real bugs found and fixed along the way (all in `CLAUDE.md`'s
   repository-layout notes): `submit_answer()` reading a nonexistent column,
   a missing `search_path` on every helper function that silently broke
-  *every* parent signup, and a `SECURITY DEFINER` view that leaked every
-  family's question data to any authenticated caller
+  *every* parent signup, a `SECURITY DEFINER` view that leaked every
+  family's question data to any authenticated caller, and (2026-09-21) a
+  `PUBLIC`-role grant that made the search_path fix's own `handle_new_user`
+  lockdown incomplete
 - Shared types for cross-app type safety
 - Mobile app: still just a `package.json` placeholder — dependencies were
   bumped 2026-09-20 (Expo 49→57, React Native 0.72→0.87) but no app code
