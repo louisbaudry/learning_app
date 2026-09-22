@@ -56,14 +56,14 @@ deployed to it.
   bumped 2026-09-20 (Expo 49→57, React Native 0.72→0.87) but no app code
   exists yet to build against them
 
-**Next up:**
-- Confirm the `/play` test harness end-to-end on a real device (needs a
-  local run — this can't be verified from a cloud Claude Code session, see
-  `CLAUDE.md`)
-- Deploy `generate-lesson` to production; build the admin panel form that calls it
-- `upload-image` Edge Function (signed URLs)
-- Admin panel features (create students, content editor/review, assign lessons)
-- Scaffold and build the real mobile app (React Native + Expo)
+**What's next** lives on the [project board](https://github.com/louisbaudry/learning_app/issues),
+not in this file — one issue per open entry in [`BACKLOG.md`](BACKLOG.md),
+labelled by epic and size. This section describes the shape of the
+project; the board is the only thing that tracks its progress. Broadly,
+the open epics are: finishing the backend (deploy `generate-lesson`,
+`upload-image`), the admin panel (students, content review, assignments,
+progress), the real Expo mobile app, the `TESTING.md` priority tiers, and
+the accessibility/i18n/privacy work that Phase 1.5 ends on.
 
 ## Documentation
 
@@ -71,6 +71,7 @@ deployed to it.
 
 | Document | What it covers |
 |---|---|
+| [`BACKLOG.md`](BACKLOG.md) | Every Phase 1/1.5 work item, by epic and size. Completed entries keep the record of what the work taught; open entries link to the GitHub issue that carries their status |
 | [`SPECIFICATIONS.md`](SPECIFICATIONS.md) | Vision, user personas, feature list, system architecture, security & privacy, accessibility & i18n, tech stack, roadmap, and every resolved architecture decision |
 | [`DATABASE_SCHEMA.md`](DATABASE_SCHEMA.md) | Full PostgreSQL schema (Supabase), Row Level Security policies, triggers, storage buckets |
 | [`AI_CONTENT_GENERATION.md`](AI_CONTENT_GENERATION.md) | How Claude generates lessons: prompt design, structured-output contract, model/A-B strategy, mandatory parent review workflow |

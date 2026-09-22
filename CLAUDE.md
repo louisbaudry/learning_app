@@ -28,6 +28,11 @@ truth. When implementing features, update the relevant spec (DATABASE_SCHEMA.md,
 EDGE_FUNCTIONS.md, etc.) at the same time, rather than drifting from design.
 
 Read in this order for full context:
+0. `BACKLOG.md` — what has been built and what it taught, plus the
+   repo's open GitHub issues (what's next — one per open backlog entry,
+   labelled by epic and size). Start here; it is the fastest way to see
+   where the project actually is. Don't start an item without reading
+   the spec section it names.
 1. `SPECIFICATIONS.md` — vision, personas, features, architecture, all
    resolved decisions (§11: mobile framework, backend, images, AI review,
    offline, business model, child login, co-parent access, data export,
@@ -42,6 +47,50 @@ Read in this order for full context:
 4. `design/` — UI wireframes (see below).
 5. `TESTING.md` — the testing strategy for once application code exists:
    risk-ordered priority tiers, tools per platform, CI plan.
+
+## The working rhythm
+
+1. **Spec before code.** A design decision (a schema change, a new Edge
+   Function contract, a product-scope change) gets written into the
+   relevant spec — `DATABASE_SCHEMA.md`, `EDGE_FUNCTIONS.md`,
+   `SPECIFICATIONS.md` — before or alongside the implementation, not
+   after. A schema change also adds its numbered
+   `supabase/migrations/*.sql` file in that same change.
+2. **One card, one branch, one PR.** Take a single issue from the board,
+   branch for it, and end with a PR whose body says `Closes #NN` — on
+   merge that closes the issue and moves its card, so the board stays
+   true with no bookkeeping. Rewrite the `BACKLOG.md` entry as _record_
+   in the same change: strike the title through, say where the code
+   lives, keep what it taught (a bug caught, a design choice made), and
+   drop the issue link. Its **status** is the issue's job, never the
+   file's; `BACKLOG.md`'s own header states the two heading forms.
+3. **Never merge without being asked.** Push the branch, open the PR,
+   describe what it does — then wait. This holds even when the change
+   looks obviously safe.
+4. **Branch from `main`, merge back to `main`, promptly.** Never branch
+   from another session's branch, and never let one accumulate several
+   sessions of work.
+5. **One session at a time on one area.** Every session writes its record
+   into `BACKLOG.md`, which makes that file a single point of contention
+   by design. Two sessions on the same epic conflict there, in entries
+   neither was editing on purpose. This project has already paid for
+   ignoring that once: two parallel sessions built the backend
+   simultaneously and created a second Supabase project that had to be
+   torn down (see `BACKLOG.md` #2).
+
+## Where "what's left" actually lives
+
+Two places, deliberately split. **Open GitHub issues** carry status,
+ordering and what's in flight — one per open `BACKLOG.md` entry, labelled
+`epic:*` and `size:*`, linked from that entry. **`BACKLOG.md`** carries
+the record of what shipped and why.
+
+Check the issues before assuming what's left, and the backlog before
+assuming a decision was never made. Don't trust the "Project status"
+section above or `README.md` for what's done — both go stale immediately;
+they describe the shape of the project, not its progress. Updating a
+backlog entry's _status_ in markdown is the thing not to do — move the
+card instead.
 
 ## Key architectural decisions (do not re-litigate without asking)
 
@@ -82,6 +131,9 @@ Read in this order for full context:
 
 ### Specifications & Design (Phase 0)
 
+- `BACKLOG.md` — the Phase 1/1.5 work record. Every open entry is a
+  GitHub issue on the project board; completed entries keep the
+  write-up of what the work taught. Never record progress here.
 - `SPECIFICATIONS.md`, `DATABASE_SCHEMA.md`, `AI_CONTENT_GENERATION.md` —
   the specs. Edit these when a design decision changes, and log the decision
   inline rather than deleting the prior reasoning.
