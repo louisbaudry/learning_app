@@ -81,7 +81,7 @@ rule that came out of it — a numbered `supabase/migrations/*.sql` file in
 the *same change* as the `DATABASE_SCHEMA.md` update, never edited in
 place once applied — is now in `CLAUDE.md`.
 
-**#5 · CI: lint, typecheck and unit tests on every PR · S** · [issue #X]
+**#5 · CI: lint, typecheck and unit tests on every PR · S** · [issue #10](https://github.com/louisbaudry/learning_app/issues/10)
 No `.github/workflows/` exists yet. Add one: install, `npm run lint`,
 `npm run type-check`, and the P2 unit suite from #22, on every PR into
 `main` and every branch push. Linux only — there is no packaged desktop
@@ -91,7 +91,7 @@ of its own) actually committed.
 The pgTAP gate is deliberately *not* in this issue — see #21, which adds
 both the suite and its own path-filtered job.
 
-**#6 · Repo hygiene for a board-driven workflow · S** · [issue #X]
+**#6 · Repo hygiene for a board-driven workflow · S** · [issue #11](https://github.com/louisbaudry/learning_app/issues/11)
 `.github/ISSUE_TEMPLATE/` (one form matching this file's entry shape, so a
 new card carries its epic, size and spec section), a PR template whose body
 starts with `Closes #`, and the label set (`epic:0-foundations` …
@@ -147,7 +147,7 @@ correct and always had been; the view quietly opted out of them. Anything
 in this schema that leans on caller RLS must be `security_invoker`, and
 this is the case #21's pgTAP suite exists to catch automatically.
 
-**#11 · Deploy `generate-lesson` to production and verify end-to-end · S** · [issue #X]
+**#11 · Deploy `generate-lesson` to production and verify end-to-end · S** · [issue #12](https://github.com/louisbaudry/learning_app/issues/12)
 `supabase secrets set ANTHROPIC_API_KEY`, then deploy *with* JWT
 verification (it must know which family is asking). Verify one real
 generation lands as `contents.status = 'draft'` with its questions and
@@ -158,7 +158,7 @@ row.
 `/functions/v1/*` at all (HTTP/2-only backend, unsupported through the
 proxy). A hang here is not a bug in the function. Run it locally.
 
-**#12 · `upload-image` Edge Function · M** · [issue #X]
+**#12 · `upload-image` Edge Function · M** · [issue #13](https://github.com/louisbaudry/learning_app/issues/13)
 Signed upload + read URLs for Supabase Storage, per `EDGE_FUNCTIONS.md`.
 Needed by the `image_identification` question type. Must enforce
 family-scoped paths server-side (a signed URL is a capability — the
@@ -166,7 +166,7 @@ bucket path is the access control), size/MIME limits, and must not issue
 an upload URL without the `image_alt_text` that §7.1 made a schema
 requirement.
 
-**#13 · Decide the fate of the `submit-answer` Edge Function · S** · [issue #X]
+**#13 · Decide the fate of the `submit-answer` Edge Function · S** · [issue #14](https://github.com/louisbaudry/learning_app/issues/14)
 `CLAUDE.md` lists `supabase/functions/submit-answer/` as planned, but the
 `submit_answer()` DB function it would wrap already works and is already
 security-definer, so RPC-ing it directly may make the wrapper redundant.
@@ -177,7 +177,7 @@ it reads as missing work forever.
 
 ## Epic 2 — Admin panel: family & students
 
-**#14 · Student management · M** · [issue #X]
+**#14 · Student management · M** · [issue #15](https://github.com/louisbaudry/learning_app/issues/15)
 Create, edit and archive students within the signed-in family: name, birth
 date, language, disability notes (the `disability_type` field carries a
 [GDPR Art. 9](https://gdpr-info.eu/art-9-gdpr/) caveat noted in
@@ -185,7 +185,7 @@ date, language, disability notes (the `disability_type` field carries a
 field), accessibility preferences. MVP is one student; the UI shouldn't
 assume it.
 
-**#15 · Device link code generation and PIN UI · S** · [issue #X]
+**#15 · Device link code generation and PIN UI · S** · [issue #16](https://github.com/louisbaudry/learning_app/issues/16)
 The parent-facing half of #7: generate a one-time `device_link_codes`
 entry, show it large enough to read across a room, show its expiry, allow
 revoking a linked device, and set/reset the optional
@@ -193,7 +193,7 @@ revoking a linked device, and set/reset the optional
 
 ## Epic 3 — Admin panel: content
 
-**#16 · AI generation form wired to `generate-lesson` · M** · [issue #X]
+**#16 · AI generation form wired to `generate-lesson` · M** · [issue #17](https://github.com/louisbaudry/learning_app/issues/17)
 The parent's entry point: topic prompt, subject, difficulty, question
 count/mix, language, optional Éduscol
 [`curriculum_cycle`/`curriculum_domain`](https://eduscol.education.gouv.fr/)
@@ -202,7 +202,7 @@ tags. Calls #11's deployed function, shows generation state honestly
 `SPECIFICATIONS.md` §12's "can create content in <15 minutes" is mostly
 this issue plus #17.
 
-**#17 · Draft review, edit and publish · L** · [issue #X]
+**#17 · Draft review, edit and publish · L** · [issue #18](https://github.com/louisbaudry/learning_app/issues/18)
 The gate that §11 Decision 4 exists for: **AI content is never
 auto-published.** Edit question text, options, `is_correct`, hints and
 explanations; then an explicit publish that flips `contents.status` from
@@ -211,7 +211,7 @@ the ergonomics, not the guarantee. Include the parent's own reasons to
 reject: wrong difficulty, wrong register for a teenage learner, a hint
 that gives the answer away.
 
-**#18 · Content library, manual authoring and image upload · M** · [issue #X]
+**#18 · Content library, manual authoring and image upload · M** · [issue #19](https://github.com/louisbaudry/learning_app/issues/19)
 List/filter/search/archive published and draft content
 (`Bibliotheque.dc.html`), plus hand-authoring a lesson without AI (§3.1.1
 is explicit that manual entry is a first-class path, not a fallback), plus
@@ -221,14 +221,14 @@ it's what makes the dimmed contrast compliant.
 
 ## Epic 4 — Admin panel: assignments & progress
 
-**#19 · Assign content to a student, with due dates · M** · [issue #X]
+**#19 · Assign content to a student, with due dates · M** · [issue #20](https://github.com/louisbaudry/learning_app/issues/20)
 Assign, unassign, reorder, set an optional due date. Due dates are
 **soft** (§11) — they order the student's feed and drive the parent's
 "overdue" view, and they never lock an assignment. Status is
 not-started / in-progress / completed, derived from `responses`, not
 hand-maintained.
 
-**#20 · Progress dashboard · L** · [issue #X]
+**#20 · Progress dashboard · L** · [issue #21](https://github.com/louisbaudry/learning_app/issues/21)
 Completion rate, average score, trend over time, per-assignment
 breakdown, and weak-area identification (which questions Arthur retries
 most). Scoring here must use **attempt 1 only** (§11) — `responses`
@@ -237,7 +237,7 @@ report a level Arthur hasn't reached, which defeats the point of the
 dashboard. `SPECIFICATIONS.md` §12's "feels connected to Arthur's
 learning" is this issue.
 
-**#21 · Export progress as CSV/PDF · S** · [issue #X]
+**#21 · Export progress as CSV/PDF · S** · [issue #22](https://github.com/louisbaudry/learning_app/issues/22)
 §3.1.1 reporting, and doubles as the
 [GDPR Art. 15/20](https://gdpr-info.eu/art-15-gdpr/) data-export path
 `PRIVACY_POLICY.md` promises — so scope it as "everything we hold about
@@ -245,26 +245,26 @@ this child," not just the charts on screen.
 
 ## Epic 5 — Mobile app
 
-**#22 · Expo scaffold · M** · [issue #X]
+**#22 · Expo scaffold · M** · [issue #23](https://github.com/louisbaudry/learning_app/issues/23)
 `apps/mobile` is still a bare `package.json`; dependencies were bumped
 2026-09-20 (Expo 49→57, RN 0.72→0.87) with no app code underneath them to
 build against, so nothing has actually compiled on those versions yet.
 Scaffold the app, wire `packages/shared-types`, get a build onto a real
 Android device, and confirm the bump is sound.
 
-**#23 · Device linking and PIN entry · M** · [issue #X]
+**#23 · Device linking and PIN entry · M** · [issue #24](https://github.com/louisbaudry/learning_app/issues/24)
 The student-facing half of #7 and #15: enter the link code, call
 `signInAnonymously()`, redeem, persist the session, then optional PIN on
 subsequent launches. Auto-login after first session (§3.1.2) — Arthur
 should not face an auth screen twice.
 
-**#24 · Assignment feed · M** · [issue #X]
+**#24 · Assignment feed · M** · [issue #25](https://github.com/louisbaudry/learning_app/issues/25)
 `Main.dc.html`. Pending and completed assignments, ordered by due date,
 large touch targets, visual progress. The inactive bottom-nav label
 contrast fix from §7.1 is already in the wireframe — carry it into the
 real components rather than re-deriving the palette.
 
-**#25 · Question player: three types, hint, retry, results · L** · [issue #X]
+**#25 · Question player: three types, hint, retry, results · L** · [issue #26](https://github.com/louisbaudry/learning_app/issues/26)
 The core loop, and the riskiest UI in the app.
 `QuestionChoix.dc.html` / `QuestionImage.dc.html` / `Bravo.dc.html`:
 multiple choice, fill-in-the-blank, image identification; submit through
@@ -273,14 +273,14 @@ readable client-side before answering); on a wrong answer show the hint
 and allow retry until correct; completion screen. Scoring records every
 attempt and scores attempt 1 (§11).
 
-**#26 · Student accessibility settings · M** · [issue #X]
+**#26 · Student accessibility settings · M** · [issue #27](https://github.com/louisbaudry/learning_app/issues/27)
 §3.1.2 and §7.1: configurable font size (16px floor, 24px+ reachable),
 high-contrast mode, text-to-speech for questions — which is what
 `image_alt_text` was added to the schema *for*, so the TTS path must
 actually read it for image questions. No animations, keyboard/switch
 navigation, and never colour as the sole indicator.
 
-**#27 · Retire the `/play` test harness · S** · [issue #X]
+**#27 · Retire the `/play` test harness · S** · [issue #28](https://github.com/louisbaudry/learning_app/issues/28)
 `apps/admin/src/pages/play/[code].tsx` is a temporary no-login web page
 added 2026-09-15 to prove the assign → answer → results loop against the
 real backend before investing in Expo. Once #25 ships the same loop
@@ -296,7 +296,7 @@ note).
 its tiers made actionable. The first one is the only tier this app
 genuinely cannot ship without.
 
-**#28 · P0: pgTAP suite for every RLS policy · L** · [issue #X]
+**#28 · P0: pgTAP suite for every RLS policy · L** · [issue #29](https://github.com/louisbaudry/learning_app/issues/29)
 `supabase/tests/*.sql` via the Supabase CLI. Family A cannot reach Family
 B; a device reaches only its own student, including against a sibling;
 `viewer` can read but never write; `draft` content never reaches a
@@ -305,27 +305,27 @@ this class of bug and was found by an advisor rather than a test — that's
 the gap this closes. Add the path-filtered CI job (any PR touching
 `supabase/migrations/`) in the same change, as a hard merge gate.
 
-**#29 · P0: Edge Function tests · M** · [issue #X]
+**#29 · P0: Edge Function tests · M** · [issue #30](https://github.com/louisbaudry/learning_app/issues/30)
 Deno's test runner against a local Supabase stack, not mocks. Per
 `TESTING.md` §2: `submit_answer` rejects a device submitting for a student
 it doesn't own and normalizes accents/case/whitespace before comparing;
 `redeem-link-code` rejects expired, already-used and forged codes;
 `generate-lesson` never publishes, and logs a failed generation.
 
-**#30 · P1: Playwright E2E for the parent's weekly workflow · M** · [issue #X]
+**#30 · P1: Playwright E2E for the parent's weekly workflow · M** · [issue #31](https://github.com/louisbaudry/learning_app/issues/31)
 One path, end to end: sign up → create family → generate a lesson →
 review/edit → publish → assign → see progress move after an answer lands.
 Add `axe-core` assertions here rather than as a separate accessibility
 suite — §7.1's deferred items (semantic structure, focus order) are only
 checkable against real markup.
 
-**#31 · P1: Maestro E2E for the student loop · M** · [issue #X]
+**#31 · P1: Maestro E2E for the student loop · M** · [issue #32](https://github.com/louisbaudry/learning_app/issues/32)
 YAML, black-box, chosen over Detox for the no-native-build-changes
 reason in `TESTING.md` §2. Link code → PIN → answer correctly → answer
 incorrectly → hint → retry → completion. Nightly/pre-release, not
 per-commit.
 
-**#32 · P2: unit tests and the AI prompt regression gate · S** · [issue #X]
+**#32 · P2: unit tests and the AI prompt regression gate · S** · [issue #33](https://github.com/louisbaudry/learning_app/issues/33)
 Vitest over the cheap-to-isolate, easy-to-get-wrong logic: fill-in-blank
 normalization, `assignments.score_*` aggregation, overdue calculation, and
 the `experiments/generation-test/` Zod schema staying in sync with
@@ -337,7 +337,7 @@ parent noticing in production.
 
 ## Epic 7 — Accessibility, i18n and launch
 
-**#33 · WCAG 2.2 AA audit against real components · M** · [issue #X]
+**#33 · WCAG 2.2 AA audit against real components · M** · [issue #34](https://github.com/louisbaudry/learning_app/issues/34)
 §7.1 fixed what static wireframes could fix and explicitly deferred the
 rest to implementation: semantic structure (the wireframes are div soup by
 construction), keyboard focus order, and real
@@ -345,7 +345,7 @@ construction), keyboard focus order, and real
 measurement on rendered components. Also tighten the placeholder-text
 contrast §7.1 flagged but left. Audit both apps; fix what it finds.
 
-**#34 · i18n: `fr`/`en` strings and a language switcher · M** · [issue #X]
+**#34 · i18n: `fr`/`en` strings and a language switcher · M** · [issue #35](https://github.com/louisbaudry/learning_app/issues/35)
 §7.2. Every string in translation files, none hardcoded; date/time
 localisation; user preference from `profiles`. French is the default —
 it's Arthur's language, and per `CLAUDE.md` all *content* is authored
@@ -353,7 +353,7 @@ French-first even though all code and comments stay English. Build the
 plumbing so `es`/`uk` are a file each in Phase 2; the `language` columns
 already accept all four.
 
-**#35 · Privacy: policy review, retention and deletion · M** · [issue #X]
+**#35 · Privacy: policy review, retention and deletion · M** · [issue #36](https://github.com/louisbaudry/learning_app/issues/36)
 `PRIVACY_POLICY.md` is a draft, explicitly pending professional review.
 Get it reviewed, then implement what it promises: retention windows,
 account and child-data deletion, the sub-processor list kept true (Claude
@@ -361,7 +361,7 @@ API is one), and the `terms_accepted_at` consent record actually written.
 [CNIL](https://www.cnil.fr/) guidance on minors and the age-15 threshold
 in §11 Decision 12 are the reference. #21 covers the export half.
 
-**#36 · 🏁 Private beta with Arthur — Phase 1 is done when this ships · L** · [issue #X]
+**#36 · 🏁 Private beta with Arthur — Phase 1 is done when this ships · L** · [issue #37](https://github.com/louisbaudry/learning_app/issues/37)
 Not a coding task and deliberately on the board anyway, as the marker that
 says what all of the above was for. `SPECIFICATIONS.md` §9.2: the app on
 Arthur's phone, the parent creating real lessons weekly, for the eight
