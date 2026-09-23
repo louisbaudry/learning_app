@@ -129,6 +129,22 @@ card instead.
 
 ## Repository layout
 
+### Repo & workflow
+
+- `.github/ISSUE_TEMPLATE/backlog-item.yml` — the issue form for a
+  `BACKLOG.md` entry (epic, size, the spec section it implements). Blank
+  issues stay enabled on purpose: a bug found while building is not a
+  backlog card.
+- `.github/pull_request_template.md` — body starts with `Closes #`, and
+  the checklist is the working rhythm above (rewrite the `BACKLOG.md`
+  entry as record, update the spec, add the migration).
+- `.github/labels.md` — **the source of truth for the label set**
+  (`epic:0-foundations` … `epic:7-launch`, `size:S|M|L`) with the hex
+  colours. A label invented in the GitHub UI splits the board silently;
+  if it isn't in that file it shouldn't exist. Note that issue forms
+  can't apply the epic/size labels from their dropdowns — adding them is
+  a manual step on each new card.
+
 ### Specifications & Design (Phase 0)
 
 - `BACKLOG.md` — the Phase 1/1.5 work record. Every open entry is a

@@ -1,0 +1,4 @@
+# Blank issues stay on deliberately: a bug found while building is not a
+# backlog card, and forcing it into that shape means people route around
+# the tracker entirely.
+blank_issues_enabled: true

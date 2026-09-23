@@ -91,12 +91,24 @@ of its own) actually committed.
 The pgTAP gate is deliberately *not* in this issue — see #21, which adds
 both the suite and its own path-filtered job.
 
-**#6 · Repo hygiene for a board-driven workflow · S** · [issue #11](https://github.com/louisbaudry/learning_app/issues/11)
-`.github/ISSUE_TEMPLATE/` (one form matching this file's entry shape, so a
-new card carries its epic, size and spec section), a PR template whose body
-starts with `Closes #`, and the label set (`epic:0-foundations` …
-`epic:7-launch`, `size:S|M|L`) documented so it survives someone adding a
-label by hand in the UI.
+**#6 · ~~Repo hygiene for a board-driven workflow~~ · DONE — `.github/`**
+A backlog-item issue form carrying epic, size and the spec section it
+implements; a PR template whose body starts with `Closes #` and whose
+checklist is the rhythm's rule 2 (rewrite this file's entry as record in
+the same change); and `.github/labels.md` as the source of truth for the
+label set. Blank issues stay enabled — a bug found while building is not a
+backlog card, and forcing it into that shape means people file nothing.
+
+Two things the form can't do, found while building it. GitHub issue forms
+apply a **static** label list per form, so the epic and size dropdowns
+record those values in the issue *body* but cannot set the matching labels
+— that stays a manual step, and the form ends with a checkbox saying so
+rather than pretending otherwise. And label colours aren't repo content at
+all: they live in GitHub's own settings, so `labels.md` carries the hex
+values and applying them is a hand step in **Settings → Labels**. Both are
+the same lesson — a board convention that only exists in a template is
+enforced by nothing, which is why the set is written down in the repo where
+a diff can catch it drifting.
 
 ## Epic 1 — Backend completion
 
