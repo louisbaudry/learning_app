@@ -279,6 +279,12 @@ this child," not just the charts on screen.
 ## Epic 5 — Mobile app
 
 **#22 · Expo scaffold · M** · [issue #23](https://github.com/louisbaudry/learning_app/issues/23)
+Note (2026-09-24): `apps/mobile` now has **no dependencies** — the Expo /
+React Native tree it declared was removed because the workspace had no
+source files using it, while still pulling 36 npm advisories (one
+critical) into every checkout and every CI run. Scaffold with
+`create-expo-app` and let it write a current dependency block; run
+`npm audit` immediately after, while you are already in that graph.
 `apps/mobile` is still a bare `package.json`; dependencies were bumped
 2026-09-20 (Expo 49→57, RN 0.72→0.87) with no app code underneath them to
 build against, so nothing has actually compiled on those versions yet.

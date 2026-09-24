@@ -194,7 +194,13 @@ card instead.
     once the real mobile app exists; don't build on top of it.
   - `src/lib/supabase.ts` — Supabase client initialization
   - `tsconfig.json`, `next.config.js`, `.env.example`
-- `apps/mobile/` — React Native + Expo placeholder (to be scaffolded).
+- `apps/mobile/` — React Native + Expo placeholder (to be scaffolded by
+  `BACKLOG.md` #22). **Deliberately has no dependencies** — see its
+  `README.md`. It used to declare the full Expo/RN tree with no source
+  files to use it, which pulled 36 advisories (one critical) into every
+  checkout and every CI run. `create-expo-app` will write a current
+  dependency block at scaffold time; don't re-add them by hand before
+  then.
 - `packages/shared-types/` — TypeScript interfaces for database models, enums,
   API types. Imported by both admin panel and mobile app.
 - `packages/supabase-client/` — Shared Supabase utilities (future).
