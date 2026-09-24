@@ -1,0 +1,94 @@
+name: Backlog item
+description: A unit of work from BACKLOG.md — carries its epic, size and the spec section it implements.
+title: "Backlog #<N>: <title>"
+body:
+  - type: markdown
+    attributes:
+      value: |
+        One card per open `BACKLOG.md` entry. A card filed without its epic,
+        size and spec section is a card nobody can pick up cold.
+
+        Filing something that is *not* a backlog entry — a bug found while
+        building, a question — open a blank issue instead.
+
+  - type: input
+    id: backlog-id
+    attributes:
+      label: Backlog entry
+      description: >
+        The `#N` heading in `BACKLOG.md` this card tracks. The two numberings
+        are independent and will never line up — `#12` is a backlog ID, this
+        issue's own number is where its state lives.
+      placeholder: "#12"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: epic
+    attributes:
+      label: Epic
+      options:
+        - 0 — Foundations
+        - 1 — Backend completion
+        - 2 — Admin panel: family & students
+        - 3 — Admin panel: content
+        - 4 — Admin panel: assignments & progress
+        - 5 — Mobile app
+        - 6 — Testing
+        - 7 — Accessibility, i18n and launch
+    validations:
+      required: true
+
+  - type: dropdown
+    id: size
+    attributes:
+      label: Size
+      description: "S ≈ half a day · M ≈ 1–2 days · L ≈ 3–5 days"
+      options:
+        - S
+        - M
+        - L
+    validations:
+      required: true
+
+  - type: input
+    id: spec
+    attributes:
+      label: Spec section
+      description: >
+        The section of `SPECIFICATIONS.md`, `DATABASE_SCHEMA.md`,
+        `EDGE_FUNCTIONS.md` or `AI_CONTENT_GENERATION.md` this implements.
+        Spec before code — if no section covers it, write one first.
+      placeholder: "DATABASE_SCHEMA.md §3.8–3.9"
+    validations:
+      required: true
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: What this card covers, and anything adjacent it deliberately does not.
+    validations:
+      required: true
+
+  - type: textarea
+    id: done-when
+    attributes:
+      label: Done when
+      description: >
+        The observable condition that closes this. Something a person could
+        check without reading the diff.
+      placeholder: "Opening a new issue offers the form, and opening a PR pre-fills `Closes #`."
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: labels
+    attributes:
+      label: Before you submit
+      options:
+        - label: >
+            I will add the matching `epic:*` and `size:*` labels after
+            submitting — issue forms can't set them from the dropdowns above.
+            See `.github/labels.md`.
+          required: false

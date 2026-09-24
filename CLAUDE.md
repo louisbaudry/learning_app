@@ -28,6 +28,11 @@ truth. When implementing features, update the relevant spec (DATABASE_SCHEMA.md,
 EDGE_FUNCTIONS.md, etc.) at the same time, rather than drifting from design.
 
 Read in this order for full context:
+0. `BACKLOG.md` — what has been built and what it taught, plus the
+   repo's open GitHub issues (what's next — one per open backlog entry,
+   labelled by epic and size). Start here; it is the fastest way to see
+   where the project actually is. Don't start an item without reading
+   the spec section it names.
 1. `SPECIFICATIONS.md` — vision, personas, features, architecture, all
    resolved decisions (§11: mobile framework, backend, images, AI review,
    offline, business model, child login, co-parent access, data export,
@@ -42,6 +47,50 @@ Read in this order for full context:
 4. `design/` — UI wireframes (see below).
 5. `TESTING.md` — the testing strategy for once application code exists:
    risk-ordered priority tiers, tools per platform, CI plan.
+
+## The working rhythm
+
+1. **Spec before code.** A design decision (a schema change, a new Edge
+   Function contract, a product-scope change) gets written into the
+   relevant spec — `DATABASE_SCHEMA.md`, `EDGE_FUNCTIONS.md`,
+   `SPECIFICATIONS.md` — before or alongside the implementation, not
+   after. A schema change also adds its numbered
+   `supabase/migrations/*.sql` file in that same change.
+2. **One card, one branch, one PR.** Take a single issue from the board,
+   branch for it, and end with a PR whose body says `Closes #NN` — on
+   merge that closes the issue and moves its card, so the board stays
+   true with no bookkeeping. Rewrite the `BACKLOG.md` entry as _record_
+   in the same change: strike the title through, say where the code
+   lives, keep what it taught (a bug caught, a design choice made), and
+   drop the issue link. Its **status** is the issue's job, never the
+   file's; `BACKLOG.md`'s own header states the two heading forms.
+3. **Never merge without being asked.** Push the branch, open the PR,
+   describe what it does — then wait. This holds even when the change
+   looks obviously safe.
+4. **Branch from `main`, merge back to `main`, promptly.** Never branch
+   from another session's branch, and never let one accumulate several
+   sessions of work.
+5. **One session at a time on one area.** Every session writes its record
+   into `BACKLOG.md`, which makes that file a single point of contention
+   by design. Two sessions on the same epic conflict there, in entries
+   neither was editing on purpose. This project has already paid for
+   ignoring that once: two parallel sessions built the backend
+   simultaneously and created a second Supabase project that had to be
+   torn down (see `BACKLOG.md` #2).
+
+## Where "what's left" actually lives
+
+Two places, deliberately split. **Open GitHub issues** carry status,
+ordering and what's in flight — one per open `BACKLOG.md` entry, labelled
+`epic:*` and `size:*`, linked from that entry. **`BACKLOG.md`** carries
+the record of what shipped and why.
+
+Check the issues before assuming what's left, and the backlog before
+assuming a decision was never made. Don't trust the "Project status"
+section above or `README.md` for what's done — both go stale immediately;
+they describe the shape of the project, not its progress. Updating a
+backlog entry's _status_ in markdown is the thing not to do — move the
+card instead.
 
 ## Key architectural decisions (do not re-litigate without asking)
 
@@ -80,8 +129,36 @@ Read in this order for full context:
 
 ## Repository layout
 
+### Repo & workflow
+
+- `.github/ISSUE_TEMPLATE/backlog-item.yml` — the issue form for a
+  `BACKLOG.md` entry (epic, size, the spec section it implements). Blank
+  issues stay enabled on purpose: a bug found while building is not a
+  backlog card.
+- `.github/pull_request_template.md` — body starts with `Closes #`, and
+  the checklist is the working rhythm above (rewrite the `BACKLOG.md`
+  entry as record, update the spec, add the migration).
+- `.github/workflows/ci.yml` — `npm ci`, `npm run type-check`,
+  `npm run lint` on Node 22, on every branch push and every PR into
+  `main`. No tests in it yet (no framework exists — `BACKLOG.md` #22
+  adds both) and no `next build` (it would need the Supabase env vars).
+- `apps/admin/eslint.config.mjs` — flat config, `eslint-config-next/core-web-vitals`
+  (already a superset of the base config and `next/typescript`). The lint
+  script calls the ESLint CLI directly: **`next lint` was removed in Next
+  16**, and calling it makes `next` read `lint` as a directory name, so
+  the failure names a path rather than the real problem.
+- `.github/labels.md` — **the source of truth for the label set**
+  (`epic:0-foundations` … `epic:7-launch`, `size:S|M|L`) with the hex
+  colours. A label invented in the GitHub UI splits the board silently;
+  if it isn't in that file it shouldn't exist. Note that issue forms
+  can't apply the epic/size labels from their dropdowns — adding them is
+  a manual step on each new card.
+
 ### Specifications & Design (Phase 0)
 
+- `BACKLOG.md` — the Phase 1/1.5 work record. Every open entry is a
+  GitHub issue on the project board; completed entries keep the
+  write-up of what the work taught. Never record progress here.
 - `SPECIFICATIONS.md`, `DATABASE_SCHEMA.md`, `AI_CONTENT_GENERATION.md` —
   the specs. Edit these when a design decision changes, and log the decision
   inline rather than deleting the prior reasoning.
@@ -97,6 +174,11 @@ Read in this order for full context:
 
 ### Infrastructure & Development (Phase 1)
 
+- `docs/runbooks/` — step-by-step procedures for the things a cloud
+  Claude Code session **cannot** do, because its proxy cannot reach
+  `/functions/v1/*`: `deploy-generate-lesson.md` (`BACKLOG.md` #11) and
+  `verify-play-harness.md` (#27, confirming the core loop on a real
+  device). Both must be run from a local machine.
 - `SUPABASE_SETUP.md` — database deployment and schema reference.
 - `MONOREPO_SETUP.md` — monorepo structure and development workflow.
 - `EDGE_FUNCTIONS.md` — server-side functions (device linking, uploads, AI).
@@ -112,7 +194,13 @@ Read in this order for full context:
     once the real mobile app exists; don't build on top of it.
   - `src/lib/supabase.ts` — Supabase client initialization
   - `tsconfig.json`, `next.config.js`, `.env.example`
-- `apps/mobile/` — React Native + Expo placeholder (to be scaffolded).
+- `apps/mobile/` — React Native + Expo placeholder (to be scaffolded by
+  `BACKLOG.md` #22). **Deliberately has no dependencies** — see its
+  `README.md`. It used to declare the full Expo/RN tree with no source
+  files to use it, which pulled 36 advisories (one critical) into every
+  checkout and every CI run. `create-expo-app` will write a current
+  dependency block at scaffold time; don't re-add them by hand before
+  then.
 - `packages/shared-types/` — TypeScript interfaces for database models, enums,
   API types. Imported by both admin panel and mobile app.
 - `packages/supabase-client/` — Shared Supabase utilities (future).
@@ -234,6 +322,10 @@ npm run dev -w @learning-app/admin
 
 # Run type checking across all workspaces
 npm run type-check
+
+# Lint (ESLint CLI via apps/admin/eslint.config.mjs — NOT `next lint`,
+# which Next 16 removed)
+npm run lint
 
 # Deploy Edge Functions locally (requires Supabase CLI)
 supabase functions deploy redeem-link-code --no-verify-jwt

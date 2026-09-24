@@ -1,0 +1,48 @@
+# Lint and type-check every change before it reaches main.
+#
+# Deliberately not here yet:
+#   - tests. No test framework exists in the repo; the suite and its step
+#     arrive with BACKLOG.md #22. A green check that runs no tests is
+#     worse than no check, because it reads as covered.
+#   - the pgTAP gate. That is BACKLOG.md #21, which brings its own
+#     path-filtered job — RLS tests need a database, not this runner.
+#   - `next build`. It needs the Supabase env vars, and `tsc --noEmit`
+#     already catches what the typechecker can catch without secrets.
+name: CI
+
+on:
+  # Both triggers, because a branch pushed before its PR exists would
+  # otherwise go unchecked. The cost is that once a PR is open, a push
+  # runs this twice — drop the `push` trigger if that ever grates.
+  push:
+    branches: ['**']
+  pull_request:
+    branches: [main]
+
+# A second push supersedes the first; don't burn minutes finishing a run
+# nobody will read.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Lint & type-check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # Matches the Node the project is developed on. Next 16 needs >= 20.
+          node-version: '22'
+          cache: npm
+
+      # `npm ci` over `npm install`: it installs exactly the committed
+      # lockfile and fails if package.json has drifted from it, which is
+      # itself a check worth having.
+      - run: npm ci
+
+      - run: npm run type-check
+
+      - run: npm run lint
