@@ -185,7 +185,11 @@ row.
 **This cannot be verified from a cloud Claude Code session** — see the
 `CLAUDE.md` note: this environment's proxy cannot reach
 `/functions/v1/*` at all (HTTP/2-only backend, unsupported through the
-proxy). A hang here is not a bug in the function. Run it locally.
+proxy). A hang here is not a bug in the function. Run it locally —
+step by step in [`docs/runbooks/deploy-generate-lesson.md`](docs/runbooks/deploy-generate-lesson.md),
+which also flags that the cross-family isolation check cannot actually
+run yet: there is only one family in the project, so that check would
+pass by having nothing to violate.
 
 **#12 · `upload-image` Edge Function · M** · [issue #13](https://github.com/louisbaudry/learning_app/issues/13)
 Signed upload + read URLs for Supabase Storage, per `EDGE_FUNCTIONS.md`.
@@ -317,7 +321,11 @@ natively, delete it — and delete it rather than leaving it as "a handy web
 fallback," which is how a test harness becomes a second client nobody
 decided to maintain. Its one live obligation before then: confirm the loop
 end-to-end on a real device, which needs a local run (see #11's proxy
-note).
+note) — step by step in
+[`docs/runbooks/verify-play-harness.md`](docs/runbooks/verify-play-harness.md).
+As of 2026-09-24 the fixtures are seeded and untouched: one published
+lesson, one assignment, a valid unused link code, and zero `responses`
+rows. Nobody has ever run the loop.
 
 ## Epic 6 — Testing
 

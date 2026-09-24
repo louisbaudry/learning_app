@@ -174,6 +174,11 @@ card instead.
 
 ### Infrastructure & Development (Phase 1)
 
+- `docs/runbooks/` — step-by-step procedures for the things a cloud
+  Claude Code session **cannot** do, because its proxy cannot reach
+  `/functions/v1/*`: `deploy-generate-lesson.md` (`BACKLOG.md` #11) and
+  `verify-play-harness.md` (#27, confirming the core loop on a real
+  device). Both must be run from a local machine.
 - `SUPABASE_SETUP.md` — database deployment and schema reference.
 - `MONOREPO_SETUP.md` — monorepo structure and development workflow.
 - `EDGE_FUNCTIONS.md` — server-side functions (device linking, uploads, AI).
