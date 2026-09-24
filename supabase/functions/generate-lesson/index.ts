@@ -196,7 +196,7 @@ function jsonResponse(body: GenerateLessonResponse, status: number): Response {
   return new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } })
 }
 
-export default async (req: Request): Promise<Response> => {
+Deno.serve(async (req: Request): Promise<Response> => {
   try {
     if (req.method !== 'POST') {
       return jsonResponse({ success: false, error: 'Method not allowed' }, 405)
@@ -472,4 +472,4 @@ export default async (req: Request): Promise<Response> => {
     console.error('Unexpected error:', error)
     return jsonResponse({ success: false, error: 'Internal server error' }, 500)
   }
-}
+})

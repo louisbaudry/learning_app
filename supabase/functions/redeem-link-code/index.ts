@@ -54,19 +54,19 @@ interface RedeemCodeResponse {
  *   non-revoked device, re-calling this function (e.g. a page reload right
  *   after linking) returns the existing link instead of erroring
  *
- * Deployed with verify_jwt = true (the platform-level check, reverted
- * 2026-09-15 after briefly being disabled): an earlier debugging session
- * misdiagnosed a hang against this function as a gateway/CORS bug and
- * disabled verify_jwt as a workaround. The actual cause was unrelated —
- * the dev sandbox's outbound proxy cannot reach Supabase Edge Functions at
- * all (they run on an HTTP/2-only backend the proxy doesn't support; see
- * /root/.ccr/README.md's "Not supported through the proxy" section) — so
- * every request to any Edge Function hung there regardless of this
- * setting. No real evidence ever showed verify_jwt:true breaking OPTIONS
- * preflights. Kept the explicit in-function OPTIONS handler below anyway
- * (harmless, standard practice for browser-called functions), but restored
- * the platform-level JWT check as defense-in-depth alongside this
- * function's own `callerClient.auth.getUser()` verification.
+ * The handler MUST be registered with `Deno.serve(...)`. Until 2026-09-24
+ * it was `export default async (req) => ...`, which the Supabase Edge
+ * Runtime does not recognise: the module booted, no handler was ever
+ * attached, and every request (even an OPTIONS preflight) hung with zero
+ * response bytes until the worker was reaped. That hang was blamed on the
+ * cloud sandbox's proxy and on verify_jwt for over a week; neither was the
+ * cause. It reproduced identically from a normal Windows machine, while a
+ * `Deno.serve` hello-world on the same project answered instantly.
+ *
+ * Deployed with verify_jwt = false (`--no-verify-jwt`, per
+ * docs/runbooks/verify-play-harness.md). This function authenticates the
+ * caller itself: it requires the Authorization header and resolves the
+ * user with `callerClient.auth.getUser()` before doing anything privileged.
  *
  * Reference: DATABASE_SCHEMA.md §3.5 (device_link_codes), §3.6 (student_devices)
  */
@@ -80,7 +80,7 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
 
-export default async (req: Request): Promise<Response> => {
+Deno.serve(async (req: Request): Promise<Response> => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
@@ -195,7 +195,7 @@ export default async (req: Request): Promise<Response> => {
     console.error('Unexpected error:', error)
     return jsonResponse({ success: false, error: 'Internal server error' }, 500)
   }
-}
+})
 
 function jsonResponse(body: RedeemCodeResponse, status: number): Response {
   return new Response(JSON.stringify(body), {
