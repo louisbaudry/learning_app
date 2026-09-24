@@ -138,6 +138,15 @@ card instead.
 - `.github/pull_request_template.md` — body starts with `Closes #`, and
   the checklist is the working rhythm above (rewrite the `BACKLOG.md`
   entry as record, update the spec, add the migration).
+- `.github/workflows/ci.yml` — `npm ci`, `npm run type-check`,
+  `npm run lint` on Node 22, on every branch push and every PR into
+  `main`. No tests in it yet (no framework exists — `BACKLOG.md` #22
+  adds both) and no `next build` (it would need the Supabase env vars).
+- `apps/admin/eslint.config.mjs` — flat config, `eslint-config-next/core-web-vitals`
+  (already a superset of the base config and `next/typescript`). The lint
+  script calls the ESLint CLI directly: **`next lint` was removed in Next
+  16**, and calling it makes `next` read `lint` as a directory name, so
+  the failure names a path rather than the real problem.
 - `.github/labels.md` — **the source of truth for the label set**
   (`epic:0-foundations` … `epic:7-launch`, `size:S|M|L`) with the hex
   colours. A label invented in the GitHub UI splits the board silently;
@@ -302,6 +311,10 @@ npm run dev -w @learning-app/admin
 
 # Run type checking across all workspaces
 npm run type-check
+
+# Lint (ESLint CLI via apps/admin/eslint.config.mjs — NOT `next lint`,
+# which Next 16 removed)
+npm run lint
 
 # Deploy Edge Functions locally (requires Supabase CLI)
 supabase functions deploy redeem-link-code --no-verify-jwt

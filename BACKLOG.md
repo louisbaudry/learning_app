@@ -81,15 +81,32 @@ rule that came out of it — a numbered `supabase/migrations/*.sql` file in
 the *same change* as the `DATABASE_SCHEMA.md` update, never edited in
 place once applied — is now in `CLAUDE.md`.
 
-**#5 · CI: lint, typecheck and unit tests on every PR · S** · [issue #10](https://github.com/louisbaudry/learning_app/issues/10)
-No `.github/workflows/` exists yet. Add one: install, `npm run lint`,
-`npm run type-check`, and the P2 unit suite from #22, on every PR into
-`main` and every branch push. Linux only — there is no packaged desktop
-artifact here and no native build to matrix over. Needs the eslint/prettier
-config that `apps/admin` currently assumes (`next lint` with no flat config
-of its own) actually committed.
-The pgTAP gate is deliberately *not* in this issue — see #21, which adds
-both the suite and its own path-filtered job.
+**#5 · ~~CI: lint and typecheck on every PR~~ · DONE — `.github/workflows/ci.yml`**
+`npm ci`, `npm run type-check`, `npm run lint` on Node 22, on every branch
+push and every PR into `main`. Linux only — no packaged artifact here and
+no native build to matrix over. Unit tests are deliberately **not** in it:
+no test framework exists in the repo yet, and a green check that runs no
+tests reads as covered when it isn't. The suite and its step arrive with
+#22; the pgTAP gate with #21, which needs a database rather than this
+runner.
+
+*What it taught:* the lint script was already broken and nothing had
+noticed. `apps/admin` ran `next lint`, but Next 16 removed that subcommand
+— so `next` parsed `lint` as a *directory argument* and failed with
+`Invalid project directory provided, no such directory: apps/admin/lint`.
+An error that names a path nobody wrote, for a command that no longer
+exists. Worse, there was no eslint config anywhere in the repo, so even
+before the Next 16 upgrade the script had nothing to enforce: it was
+decorative from the day it was written. The fix commits
+`apps/admin/eslint.config.mjs` (flat config —
+`eslint-config-next/core-web-vitals`, which is a superset of the base
+config and already carries `next/typescript`) and points the script at the
+ESLint CLI directly. It passes clean on the current tree.
+
+The general lesson is why this card came before the feature cards it
+gates: a check that was never run is indistinguishable from a check that
+passes, and this one had been sitting in `package.json` looking like
+coverage. CI's first job is to make the difference visible.
 
 **#6 · ~~Repo hygiene for a board-driven workflow~~ · DONE — `.github/`**
 A backlog-item issue form carrying epic, size and the spec section it
